@@ -17,7 +17,7 @@ const BottleManager = {
             const grid = document.getElementById('bottle-list');
             if (grid) {
                 if (bottles.length === 0) {
-                    grid.innerHTML = UI.createEmptyState('gas-pump', 'No Gas Bottles', 'Start by adding your first gas bottle to track usage.');
+                    grid.innerHTML = UI.createEmptyState('gas-pump', 'Keine Gasflaschen', 'Füge deine erste Gasflasche hinzu, um den Verbrauch zu verfolgen.');
                 } else {
                     grid.innerHTML = bottles.map(bottle => this.createBottleCard(bottle)).join('');
                 }
@@ -27,7 +27,7 @@ const BottleManager = {
             console.error('Failed to load bottles:', error);
             const grid = document.getElementById('bottle-list');
             if (grid) {
-                grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Error Loading Bottles', 'Failed to load bottle data.');
+                grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Gasflaschen', 'Gasflaschendaten konnten nicht geladen werden.');
             }
         }
     },
@@ -44,12 +44,12 @@ const BottleManager = {
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-fire"></i>
-                        Gas Bottle #${bottle.id}
+                        Gasflasche Nr. ${bottle.id}
                     </h3>
                     <div class="card-actions">
                         <span class="status-badge ${bottle.active ? 'status-active' : 'status-inactive'}">
                             <i class="fas fa-circle" style="font-size: 0.6em;"></i>
-                            ${bottle.active ? 'Active' : 'Inactive'}
+                            ${bottle.active ? 'Aktiv' : 'Inaktiv'}
                         </span>
                         <button class="btn btn-sm btn-primary add-operation-btn" data-id="${bottle.id}" data-type="bottle">
                             <i class="fas fa-plus"></i>
@@ -62,29 +62,29 @@ const BottleManager = {
                 <div class="card-body">
                     <div class="card-info">
                         <div class="info-item">
-                            <span class="info-label">Purchase Date</span>
+                            <span class="info-label">Kaufdatum</span>
                             <span class="info-value">${Utils.formatDate(bottle.purchase_date)}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Purchase Price</span>
+                            <span class="info-label">Kaufpreis</span>
                             <span class="info-value">${Utils.formatCurrency(bottle.purchase_price)}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Current Weight</span>
+                            <span class="info-label">Aktuelles Gewicht</span>
                             <span class="info-value">${Utils.formatWeight(currentWeight)}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Gas Remaining</span>
+                            <span class="info-label">Restliches Gas</span>
                             <span class="info-value">${remainingPercentage}%</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Gas Used</span>
+                            <span class="info-label">Verbrauchtes Gas</span>
                             <span class="info-value">${Utils.formatWeight(usedGas)}</span>
                         </div>
                     </div>
                     ${bottle.operations && bottle.operations.length > 0 ? `
                     <div class="operations-summary">
-                        <div class="operations-count">${operationsCount} measurement${operationsCount !== 1 ? 's' : ''}</div>
+                        <div class="operations-count">${operationsCount} Messung${operationsCount !== 1 ? 'en' : ''}</div>
                         ${bottle.operations.slice(0, 3).map(op => `
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.9em; color: var(--text-secondary);">
                                 <span>${Utils.formatDate(op.date)}</span>
@@ -104,7 +104,7 @@ const BottleManager = {
         document.querySelectorAll('.add-operation-btn[data-type="bottle"]').forEach(button => {
             button.onclick = (e) => {
                 const bottleId = e.currentTarget.dataset.id;
-                UI.showOperationModal('Add Weight Measurement', 'bottle', bottleId);
+                UI.showOperationModal('Gewichtsmessung hinzufügen', 'bottle', bottleId);
             };
         });
 
@@ -133,11 +133,11 @@ const BottleManager = {
                 purchase_price: parseFloat(formData.get('purchase_price')),
                 initial_weight: parseFloat(formData.get('initial_weight')),
                 filling_weight: parseFloat(formData.get('filling_weight')),
-                active: formData.get('active') === 'on'
+                active: true
             };
 
             await API.createBottle(bottle);
-            UI.showToast('Gas bottle created successfully!', 'success');
+            UI.showToast('Gasflasche erfolgreich erstellt!', 'success');
             UI.hideModal('bottle-modal');
             UI.clearForm('bottle-form');
             BottleManager.loadBottles();
@@ -152,7 +152,7 @@ const BottleManager = {
         const bottleIdAsNumber = parseInt(targetId, 10);
         if (isNaN(bottleIdAsNumber)) {
             console.error('Invalid bottle ID for operation:', targetId);
-            UI.showToast('Error: Could not determine bottle ID for operation.', 'error');
+            UI.showToast('Fehler: Flaschen-ID für Messung konnte nicht ermittelt werden.', 'error');
             return; // Stop execution
         }
 
@@ -164,7 +164,7 @@ const BottleManager = {
                 note: formData.get('note') || null
             };
             await API.createBottleOperation(operation); // Pass the complete operation object
-            UI.showToast('Weight measurement added successfully!', 'success');
+            UI.showToast('Gewichtsmessung erfolgreich hinzugefügt!', 'success');
             UI.hideModal('operation-modal');
             UI.clearForm('operation-form');
             this.loadBottles();
@@ -174,28 +174,28 @@ const BottleManager = {
     },
 
     async deleteBottle(bottleId) {
-        if (!confirm('Are you sure you want to delete this gas bottle? This will also delete all its measurements.')) {
+        if (!confirm('Bist du sicher, dass du diese Gasflasche löschen möchtest? Dies löscht auch alle zugehörigen Messungen.')) {
             return;
         }
 
         try {
             await API.deleteBottle(bottleId);
-            UI.showToast('Gas bottle deleted successfully!', 'success');
-            this.loadBottles(); // <<< RELOAD BOTTLES AFTER DELETION
+            UI.showToast('Gasflasche erfolgreich gelöscht!', 'success');
+            this.loadBottles();
         } catch (error) {
             console.error('Failed to delete bottle:', error);
         }
     },
 
     async deleteOperation(operationId) {
-        if (!confirm('Are you sure you want to delete this measurement?')) {
+        if (!confirm('Bist du sicher, dass du diese Messung löschen möchtest?')) {
             return;
         }
 
         try {
             await API.deleteBottleOperation(operationId);
-            UI.showToast('Measurement deleted successfully!', 'success');
-            this.loadBottles(); // <<< RELOAD BOTTLES AFTER DELETION
+            UI.showToast('Messung erfolgreich gelöscht!', 'success');
+            this.loadBottles();
         } catch (error) {
             console.error('Failed to delete measurement:', error);
         }
