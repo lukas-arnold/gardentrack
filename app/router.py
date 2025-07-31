@@ -55,6 +55,21 @@ def read_device(device_id: int, db: Session = Depends(get_db_devices)):
     return db_device
 
 
+@router_devices.put("/{device_id}", response_model=schemas.DeviceRead)
+def update_device(
+    device_id: int, device: schemas.DeviceUpdate, db: Session = Depends(get_db_devices)
+):
+    """
+    Update an existing device by its ID.
+    """
+    db_device = db_operations.get_device(db, device_id=device_id)
+    if db_device is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Device not found"
+        )
+    return db_operations.update_device(db=db, db_device=db_device, device=device)
+
+
 @router_devices.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_device(device_id: int, db: Session = Depends(get_db_devices)):
     """
@@ -182,6 +197,21 @@ def read_bottle(bottle_id: int, db: Session = Depends(get_db_bottles)):
             status_code=status.HTTP_404_NOT_FOUND, detail="Bottle not found"
         )
     return db_bottle
+
+
+@router_bottles.put("/{bottle_id}", response_model=schemas.BottleRead)
+def update_bottle(
+    bottle_id: int, bottle: schemas.BottleUpdate, db: Session = Depends(get_db_bottles)
+):
+    """
+    Update an existing bottle by its ID.
+    """
+    db_bottle = db_operations.get_bottle(db, bottle_id=bottle_id)
+    if db_bottle is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Bottle not found"
+        )
+    return db_operations.update_bottle(db=db, db_bottle=db_bottle, bottle=bottle)
 
 
 @router_bottles.delete("/{bottle_id}", status_code=status.HTTP_204_NO_CONTENT)

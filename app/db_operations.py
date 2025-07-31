@@ -1,12 +1,14 @@
-from sqlalchemy.orm import Session, selectinload  # Added selectinload
+from sqlalchemy.orm import Session, selectinload
 from typing import List, Optional
 
 from app.models import DevicesDB, DeviceOperationsDB, BottlesDB, BottleOperationsDB
 from app.schemas import (
     DeviceCreate,
     DeviceOperationCreate,
+    DeviceUpdate,  # Added DeviceUpdate
     BottleCreate,
     BottleOperationCreate,
+    BottleUpdate,
 )
 
 # --- Device Operations ---
@@ -44,6 +46,18 @@ def create_device(db: Session, device: DeviceCreate) -> DevicesDB:
     Creates a new device in the database.
     """
     db_device = DevicesDB(**device.model_dump())
+    db.add(db_device)
+    db.commit()
+    db.refresh(db_device)
+    return db_device
+
+
+def update_device(db: Session, db_device: DevicesDB, device: DeviceUpdate) -> DevicesDB:
+    """
+    Updates an existing device in the database.
+    """
+    for field, value in device.model_dump(exclude_unset=True).items():
+        setattr(db_device, field, value)
     db.add(db_device)
     db.commit()
     db.refresh(db_device)
@@ -157,6 +171,18 @@ def create_bottle(db: Session, bottle: BottleCreate) -> BottlesDB:
     Creates a new bottle in the database.
     """
     db_bottle = BottlesDB(**bottle.model_dump())
+    db.add(db_bottle)
+    db.commit()
+    db.refresh(db_bottle)
+    return db_bottle
+
+
+def update_bottle(db: Session, db_bottle: BottlesDB, bottle: BottleUpdate) -> BottlesDB:
+    """
+    Updates an existing bottle in the database.
+    """
+    for field, value in bottle.model_dump(exclude_unset=True).items():
+        setattr(db_bottle, field, value)
     db.add(db_bottle)
     db.commit()
     db.refresh(db_bottle)
