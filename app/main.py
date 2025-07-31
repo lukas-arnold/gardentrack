@@ -9,7 +9,7 @@ from app.router import router_devices, router_bottles
 init_db()
 
 app = FastAPI(
-    title="GartenTrack",
+    title="GardenTrack",
 )
 
 
