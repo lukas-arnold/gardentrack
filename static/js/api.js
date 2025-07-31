@@ -17,7 +17,7 @@ const API = {
         try {
             UI.showLoading(true);
             const response = await fetch(url, config);
-            
+
             if (!response.ok) {
                 // Try to parse error data if available, otherwise use status text
                 const errorText = await response.text();
@@ -27,7 +27,7 @@ const API = {
                 } catch (e) {
                     // Not a JSON error, use the raw text
                 }
-                
+
                 throw new Error(errorData.detail?.[0]?.msg || errorData.detail || errorText || `HTTP ${response.status}: ${response.statusText}`);
             }
 
@@ -38,7 +38,7 @@ const API = {
                 return data;
             } else {
                 // For 204 No Content or responses without JSON body, return null or an empty object
-                return null; 
+                return null;
             }
         } catch (error) {
             console.error('API Error:', error);
@@ -77,11 +77,11 @@ const API = {
             console.error("device_id is missing from operation payload before API call:", operation);
             throw new Error("device_id is missing from operation payload for API call.");
         }
-        
+
         const endpoint = `${CONFIG.ENDPOINTS.DEVICES}/${deviceId}/operations/`;
-        
-        console.log('DEBUG: createDeviceOperation - Constructed endpoint:', endpoint); 
-        
+
+        console.log('DEBUG: createDeviceOperation - Constructed endpoint:', endpoint);
+
         return this.request(endpoint, {
             method: 'POST',
             body: JSON.stringify(operation)
@@ -89,7 +89,7 @@ const API = {
     },
 
     async deleteDeviceOperation(operationId) {
-        return this.request(`${CONFIG.ENDPOINTS.DEVICES}/operations/${operationId}`, { 
+        return this.request(`${CONFIG.ENDPOINTS.DEVICES}/operations/${operationId}`, {
             method: 'DELETE'
         });
     },
@@ -110,6 +110,13 @@ const API = {
         });
     },
 
+    async updateBottle(id, bottleUpdates) {
+        return this.request(`${CONFIG.ENDPOINTS.BOTTLES}/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(bottleUpdates)
+        });
+    },
+
     async deleteBottle(id) {
         return this.request(`${CONFIG.ENDPOINTS.BOTTLES}/${id}`, {
             method: 'DELETE'
@@ -122,11 +129,11 @@ const API = {
             console.error("bottle_id is missing from operation payload before API call:", operation);
             throw new Error("bottle_id is missing from operation payload for API call.");
         }
-        
+
         const endpoint = `${CONFIG.ENDPOINTS.BOTTLES}/${bottleId}/operations/`;
 
-        console.log('DEBUG: createBottleOperation - Constructed endpoint:', endpoint); 
-        
+        console.log('DEBUG: createBottleOperation - Constructed endpoint:', endpoint);
+
         return this.request(endpoint, {
             method: 'POST',
             body: JSON.stringify(operation)

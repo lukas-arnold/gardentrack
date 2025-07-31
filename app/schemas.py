@@ -82,6 +82,12 @@ class BottleCreate(BottleBase):
     pass
 
 
+class BottleUpdate(BaseModel):
+    active: bool = Field(
+        ..., description="Indicates if the gas bottle is currently active."
+    )
+
+
 class BottleRead(BottleBase, BaseModelSchema):
     operations: List[BottleOperationRead] = Field(
         [], description="List of operations (weight measurements) for this gas bottle."

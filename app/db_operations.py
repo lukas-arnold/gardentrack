@@ -7,6 +7,7 @@ from app.schemas import (
     DeviceOperationCreate,
     BottleCreate,
     BottleOperationCreate,
+    BottleUpdate,  # Added BottleUpdate
 )
 
 # --- Device Operations ---
@@ -157,6 +158,18 @@ def create_bottle(db: Session, bottle: BottleCreate) -> BottlesDB:
     Creates a new bottle in the database.
     """
     db_bottle = BottlesDB(**bottle.model_dump())
+    db.add(db_bottle)
+    db.commit()
+    db.refresh(db_bottle)
+    return db_bottle
+
+
+def update_bottle(db: Session, db_bottle: BottlesDB, bottle: BottleUpdate) -> BottlesDB:
+    """
+    Updates an existing bottle in the database.
+    """
+    for field, value in bottle.model_dump(exclude_unset=True).items():
+        setattr(db_bottle, field, value)
     db.add(db_bottle)
     db.commit()
     db.refresh(db_bottle)

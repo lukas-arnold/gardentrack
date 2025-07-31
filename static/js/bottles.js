@@ -1,5 +1,6 @@
 const BottleManager = {
     init() {
+        this.showInactiveBottles = false; // New state to track visibility of inactive bottles
         this.bindEvents();
         this.loadBottles();
     },
@@ -9,6 +10,10 @@ const BottleManager = {
             UI.clearForm('bottle-form');
             UI.showModal('bottle-modal');
         });
+
+        document.getElementById('toggle-inactive-bottles-btn')?.addEventListener('click', () => {
+            this.toggleInactiveBottleVisibility();
+        });
     },
 
     async loadBottles() {
@@ -16,12 +21,16 @@ const BottleManager = {
             const bottles = await API.getBottles();
             const grid = document.getElementById('bottle-list');
             if (grid) {
-                if (bottles.length === 0) {
+                // Filter bottles based on showInactiveBottles state
+                const bottlesToDisplay = this.showInactiveBottles ? bottles : bottles.filter(bottle => bottle.active);
+
+                if (bottlesToDisplay.length === 0) {
                     grid.innerHTML = UI.createEmptyState('gas-pump', 'Keine Gasflaschen', 'Füge deine erste Gasflasche hinzu, um den Verbrauch zu verfolgen.');
                 } else {
-                    grid.innerHTML = bottles.map(bottle => this.createBottleCard(bottle)).join('');
+                    grid.innerHTML = bottlesToDisplay.map(bottle => this.createBottleCard(bottle)).join('');
                 }
                 this.bindBottleCardEvents();
+                this.updateToggleButtonStyle(); // Update button style on load
             }
         } catch (error) {
             console.error('Failed to load bottles:', error);
@@ -40,7 +49,7 @@ const BottleManager = {
         const remainingPercentage = ((currentWeight - (bottle.initial_weight - bottle.filling_weight)) / bottle.filling_weight * 100).toFixed(1);
 
         return `
-            <div class="card" data-bottle-id="${bottle.id}">
+            <div class="card ${!bottle.active && !this.showInactiveBottles ? 'hidden-inactive' : ''}" data-bottle-id="${bottle.id}">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-fire"></i>
@@ -53,6 +62,9 @@ const BottleManager = {
                         </span>
                         <button class="btn btn-sm btn-primary add-operation-btn" data-id="${bottle.id}" data-type="bottle">
                             <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="btn btn-sm btn-${bottle.active ? 'secondary' : 'success'} toggle-active-btn" data-id="${bottle.id}" data-active="${bottle.active}">
+                            <i class="fas fa-${bottle.active ? 'archive' : 'undo'}"></i>
                         </button>
                         <button class="btn btn-sm btn-danger delete-bottle-btn" data-id="${bottle.id}">
                             <i class="fas fa-trash"></i>
@@ -121,19 +133,27 @@ const BottleManager = {
                 await this.deleteOperation(operationId);
             };
         });
+
+        document.querySelectorAll('.toggle-active-btn').forEach(button => {
+            button.onclick = async (e) => {
+                const bottleId = e.currentTarget.dataset.id;
+                const currentActiveStatus = e.currentTarget.dataset.active === 'true';
+                await this.toggleBottleActiveStatus(bottleId, !currentActiveStatus);
+            };
+        });
     },
 
     handleBottleFormSubmit: async function(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
-        
+
         try {
             const bottle = {
                 purchase_date: formData.get('purchase_date'),
                 purchase_price: parseFloat(formData.get('purchase_price')),
                 initial_weight: parseFloat(formData.get('initial_weight')),
                 filling_weight: parseFloat(formData.get('filling_weight')),
-                active: true
+                active: true // New bottles are active by default
             };
 
             await API.createBottle(bottle);
@@ -198,6 +218,42 @@ const BottleManager = {
             this.loadBottles();
         } catch (error) {
             console.error('Failed to delete measurement:', error);
+        }
+    },
+
+    async toggleBottleActiveStatus(bottleId, newStatus) {
+        const actionText = newStatus ? 'aktivieren' : 'deaktivieren';
+        if (!confirm(`Bist du sicher, dass du diese Gasflasche ${actionText} möchtest?`)) {
+            return;
+        }
+
+        try {
+            await API.updateBottle(bottleId, { active: newStatus });
+            UI.showToast(`Gasflasche erfolgreich ${actionText}!`, 'success');
+            this.loadBottles();
+        } catch (error) {
+            console.error(`Failed to ${actionText} bottle:`, error);
+        }
+    },
+
+    toggleInactiveBottleVisibility() {
+        this.showInactiveBottles = !this.showInactiveBottles;
+        this.loadBottles(); // Reload bottles to apply the filter
+        this.updateToggleButtonStyle();
+    },
+
+    updateToggleButtonStyle() {
+        const toggleButton = document.getElementById('toggle-inactive-bottles-btn');
+        if (toggleButton) {
+            if (this.showInactiveBottles) {
+                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Inaktive ausblenden';
+                toggleButton.classList.remove('btn-secondary');
+                toggleButton.classList.add('btn-info');
+            } else {
+                toggleButton.innerHTML = '<i class="fas fa-eye"></i> Inaktive anzeigen';
+                toggleButton.classList.remove('btn-info');
+                toggleButton.classList.add('btn-secondary');
+            }
         }
     }
 };

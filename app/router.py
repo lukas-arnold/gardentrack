@@ -184,6 +184,21 @@ def read_bottle(bottle_id: int, db: Session = Depends(get_db_bottles)):
     return db_bottle
 
 
+@router_bottles.put("/{bottle_id}", response_model=schemas.BottleRead)
+def update_bottle(
+    bottle_id: int, bottle: schemas.BottleUpdate, db: Session = Depends(get_db_bottles)
+):
+    """
+    Update an existing bottle by its ID.
+    """
+    db_bottle = db_operations.get_bottle(db, bottle_id=bottle_id)
+    if db_bottle is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Bottle not found"
+        )
+    return db_operations.update_bottle(db=db, db_bottle=db_bottle, bottle=bottle)
+
+
 @router_bottles.delete("/{bottle_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_bottle(bottle_id: int, db: Session = Depends(get_db_bottles)):
     """
