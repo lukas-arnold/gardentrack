@@ -5,16 +5,10 @@ const DeviceManager = {
     },
 
     bindEvents() {
-        // Event listeners for elements that are part of the dynamically loaded content
-        // These need to be re-bound every time the devices.html content is loaded.
         document.getElementById('add-device-btn')?.addEventListener('click', () => {
             UI.clearForm('device-form');
             UI.showModal('device-modal');
         });
-
-        // The device and bottle forms are now global (in index.html),
-        // so their submit handlers can be directly attached in App.js's rebindSharedFormSubmissions.
-        // We just need to ensure the manager provides the handler.
     },
 
     async loadDevices() {
@@ -27,7 +21,7 @@ const DeviceManager = {
                 } else {
                     grid.innerHTML = devices.map(device => this.createDeviceCard(device)).join('');
                 }
-                this.bindDeviceCardEvents(); // Re-bind events for newly rendered cards
+                this.bindDeviceCardEvents();
             }
         } catch (error) {
             console.error('Failed to load devices:', error);
@@ -116,7 +110,6 @@ const DeviceManager = {
         });
     },
 
-    // Form submission handler for device creation (now global)
     handleDeviceFormSubmit: async function(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -130,21 +123,30 @@ const DeviceManager = {
             UI.showToast('Device created successfully!', 'success');
             UI.hideModal('device-modal');
             UI.clearForm('device-form');
-            DeviceManager.loadDevices(); // Use DeviceManager.loadDevices()
+            DeviceManager.loadDevices();
         } catch (error) {
             console.error('Failed to create device:', error);
         }
     },
 
-    // Form submission handler for operations (delegated from App.js)
-    submitOperation: async function(formData, targetId) {
+    submitOperation: async function(formData, type, targetId) {
+        if (type !== 'device') return;
+
+        const deviceIdAsNumber = parseInt(targetId, 10);
+        if (isNaN(deviceIdAsNumber)) {
+            console.error('Invalid device ID for operation:', targetId);
+            UI.showToast('Error: Could not determine device ID for operation.', 'error');
+            return; // Stop execution
+        }
+
         try {
             const operation = {
+                device_id: deviceIdAsNumber, // Add device_id here
                 date: formData.get('date'),
                 duration: parseInt(formData.get('duration')),
                 note: formData.get('note') || null
             };
-            await API.createDeviceOperation(parseInt(targetId), operation);
+            await API.createDeviceOperation(operation); // Pass the complete operation object
             UI.showToast('Operation added successfully!', 'success');
             UI.hideModal('operation-modal');
             UI.clearForm('operation-form');
@@ -162,7 +164,7 @@ const DeviceManager = {
         try {
             await API.deleteDevice(deviceId);
             UI.showToast('Device deleted successfully!', 'success');
-            this.loadDevices();
+            this.loadDevices(); // <<< RELOAD DEVICES AFTER DELETION
         } catch (error) {
             console.error('Failed to delete device:', error);
         }
@@ -176,7 +178,7 @@ const DeviceManager = {
         try {
             await API.deleteDeviceOperation(operationId);
             UI.showToast('Operation deleted successfully!', 'success');
-            this.loadDevices();
+            this.loadDevices(); // <<< RELOAD DEVICES AFTER DELETION
         } catch (error) {
             console.error('Failed to delete operation:', error);
         }

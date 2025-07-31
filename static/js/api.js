@@ -9,17 +9,37 @@ const API = {
             ...options
         };
 
+        // --- DEBUGGING LOGS ---
+        console.log('API Request URL:', url);
+        console.log('API Request Config:', config);
+        // --- END DEBUGGING LOGS ---
+
         try {
             UI.showLoading(true);
             const response = await fetch(url, config);
             
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                // Try to parse error data if available, otherwise use status text
+                const errorText = await response.text();
+                let errorData = {};
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch (e) {
+                    // Not a JSON error, use the raw text
+                }
+                
+                throw new Error(errorData.detail?.[0]?.msg || errorData.detail || errorText || `HTTP ${response.status}: ${response.statusText}`);
             }
 
-            const data = await response.json();
-            return data;
+            // MODIFIED: Conditionally parse JSON response
+            const contentType = response.headers.get('content-type');
+            if (response.status !== 204 && contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                return data;
+            } else {
+                // For 204 No Content or responses without JSON body, return null or an empty object
+                return null; 
+            }
         } catch (error) {
             console.error('API Error:', error);
             UI.showToast(error.message, 'error');
@@ -51,15 +71,25 @@ const API = {
         });
     },
 
-    async createDeviceOperation(deviceId, operation) {
-        return this.request(`${CONFIG.ENDPOINTS.DEVICES}/${deviceId}/operations/`, {
+    async createDeviceOperation(operation) {
+        const deviceId = operation.device_id;
+        if (!deviceId) {
+            console.error("device_id is missing from operation payload before API call:", operation);
+            throw new Error("device_id is missing from operation payload for API call.");
+        }
+        
+        const endpoint = `${CONFIG.ENDPOINTS.DEVICES}/${deviceId}/operations/`;
+        
+        console.log('DEBUG: createDeviceOperation - Constructed endpoint:', endpoint); 
+        
+        return this.request(endpoint, {
             method: 'POST',
             body: JSON.stringify(operation)
         });
     },
 
     async deleteDeviceOperation(operationId) {
-        return this.request(`${CONFIG.ENDPOINTS.DEVICES}/operations/${operationId}`, {
+        return this.request(`${CONFIG.ENDPOINTS.DEVICES}/operations/${operationId}`, { 
             method: 'DELETE'
         });
     },
@@ -86,8 +116,18 @@ const API = {
         });
     },
 
-    async createBottleOperation(bottleId, operation) {
-        return this.request(`${CONFIG.ENDPOINTS.BOTTLES}/${bottleId}/operations/`, {
+    async createBottleOperation(operation) {
+        const bottleId = operation.bottle_id;
+        if (!bottleId) {
+            console.error("bottle_id is missing from operation payload before API call:", operation);
+            throw new Error("bottle_id is missing from operation payload for API call.");
+        }
+        
+        const endpoint = `${CONFIG.ENDPOINTS.BOTTLES}/${bottleId}/operations/`;
+
+        console.log('DEBUG: createBottleOperation - Constructed endpoint:', endpoint); 
+        
+        return this.request(endpoint, {
             method: 'POST',
             body: JSON.stringify(operation)
         });

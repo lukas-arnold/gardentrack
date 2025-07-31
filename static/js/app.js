@@ -54,10 +54,8 @@ const App = {
             }
         });
 
-        // Re-bind form submissions for modals, as they are now global
-        // The event listeners for these forms need to be removed and re-added
-        // each time the content is loaded/switched to avoid duplicate handlers.
-        // It's better to manage them directly in the respective managers.
+        // Bind the global form submission handlers once
+        this.rebindSharedFormSubmissions();
     },
 
     bindNavigationEvents() {
@@ -92,10 +90,6 @@ const App = {
                 BottleManager.init(); // Initialize or re-initialize bottles functionality
             }
 
-            // Re-bind global form submissions only if needed, or ensure they are handled by managers
-            // For example, the `operation-form` listener.
-            this.rebindSharedFormSubmissions();
-
         } catch (error) {
             console.error('Error loading content:', error);
             UI.showToast(`Could not load ${tabType} content.`, 'error');
@@ -115,44 +109,40 @@ const App = {
         });
     },
 
-    // This function ensures common form submissions are handled correctly
-    // It's crucial because content is loaded dynamically, so event listeners
-    // on these forms might be lost or duplicated if not managed carefully.
     rebindSharedFormSubmissions() {
-        // Remove previous listeners to prevent duplicates
-        const opForm = document.getElementById('operation-form');
         const deviceForm = document.getElementById('device-form');
         const bottleForm = document.getElementById('bottle-form');
+        const operationForm = document.getElementById('operation-form');
 
-        // It's generally safer to have these form submissions handled directly
-        // by the respective managers. If a form is part of the dynamically loaded
-        // content, its submit handler needs to be attached *after* it's loaded.
-        // Since modals are now global, their form submissions can be directly bound.
+        // It's safer to remove and re-add listeners to prevent multiple bindings
+        // if this function were called multiple times (though in this SPA, it's once at App.init)
 
-        // Device form submission (global)
         if (deviceForm) {
-            deviceForm.removeEventListener('submit', DeviceManager.handleDeviceFormSubmit); // Assuming a named function
+            deviceForm.removeEventListener('submit', DeviceManager.handleDeviceFormSubmit);
             deviceForm.addEventListener('submit', DeviceManager.handleDeviceFormSubmit);
         }
 
-        // Bottle form submission (global)
         if (bottleForm) {
-            bottleForm.removeEventListener('submit', BottleManager.handleBottleFormSubmit); // Assuming a named function
+            bottleForm.removeEventListener('submit', BottleManager.handleBottleFormSubmit);
             bottleForm.addEventListener('submit', BottleManager.handleBottleFormSubmit);
         }
         
-        // Operation form submission (global, but context-dependent)
-        if (opForm) {
-            opForm.removeEventListener('submit', App.handleOperationFormSubmit); // Remove App's general handler
-            opForm.addEventListener('submit', App.handleOperationFormSubmit); // Add App's general handler
+        if (operationForm) {
+            operationForm.removeEventListener('submit', App.handleOperationFormSubmit);
+            operationForm.addEventListener('submit', App.handleOperationFormSubmit);
         }
     },
 
     // General handler for operation form that delegates to the currentManager
+    // This handler extracts the type and targetId from the form's dataset
     async handleOperationFormSubmit(e) {
         e.preventDefault();
+        const operationForm = e.target;
+        const type = operationForm.dataset.type; // Get type (device/bottle)
+        const targetId = operationForm.dataset.targetId; // Get ID of the device/bottle
+
         if (currentManager && typeof currentManager.submitOperation === 'function') {
-            await currentManager.submitOperation(new FormData(e.target), e.target.dataset.targetId);
+            await currentManager.submitOperation(new FormData(operationForm), type, targetId);
         } else {
             console.warn('No active manager or submitOperation function found for operation form.');
         }

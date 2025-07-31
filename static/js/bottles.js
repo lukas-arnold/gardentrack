@@ -5,14 +5,10 @@ const BottleManager = {
     },
 
     bindEvents() {
-        // Event listeners for elements that are part of the dynamically loaded content
         document.getElementById('add-bottle-btn')?.addEventListener('click', () => {
             UI.clearForm('bottle-form');
             UI.showModal('bottle-modal');
         });
-
-        // The bottle form is now global (in index.html),
-        // so its submit handler can be directly attached in App.js's rebindSharedFormSubmissions.
     },
 
     async loadBottles() {
@@ -25,7 +21,7 @@ const BottleManager = {
                 } else {
                     grid.innerHTML = bottles.map(bottle => this.createBottleCard(bottle)).join('');
                 }
-                this.bindBottleCardEvents(); // Re-bind events for newly rendered cards
+                this.bindBottleCardEvents();
             }
         } catch (error) {
             console.error('Failed to load bottles:', error);
@@ -127,7 +123,6 @@ const BottleManager = {
         });
     },
 
-    // Form submission handler for bottle creation (now global)
     handleBottleFormSubmit: async function(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -145,21 +140,30 @@ const BottleManager = {
             UI.showToast('Gas bottle created successfully!', 'success');
             UI.hideModal('bottle-modal');
             UI.clearForm('bottle-form');
-            BottleManager.loadBottles(); // Use BottleManager.loadBottles()
+            BottleManager.loadBottles();
         } catch (error) {
             console.error('Failed to create bottle:', error);
         }
     },
 
-    // Form submission handler for operations (delegated from App.js)
-    submitOperation: async function(formData, targetId) {
+    submitOperation: async function(formData, type, targetId) {
+        if (type !== 'bottle') return;
+
+        const bottleIdAsNumber = parseInt(targetId, 10);
+        if (isNaN(bottleIdAsNumber)) {
+            console.error('Invalid bottle ID for operation:', targetId);
+            UI.showToast('Error: Could not determine bottle ID for operation.', 'error');
+            return; // Stop execution
+        }
+
         try {
             const operation = {
+                bottle_id: bottleIdAsNumber, // Add bottle_id here
                 date: formData.get('date'),
                 weight: parseFloat(formData.get('weight')),
                 note: formData.get('note') || null
             };
-            await API.createBottleOperation(parseInt(targetId), operation);
+            await API.createBottleOperation(operation); // Pass the complete operation object
             UI.showToast('Weight measurement added successfully!', 'success');
             UI.hideModal('operation-modal');
             UI.clearForm('operation-form');
@@ -177,7 +181,7 @@ const BottleManager = {
         try {
             await API.deleteBottle(bottleId);
             UI.showToast('Gas bottle deleted successfully!', 'success');
-            this.loadBottles();
+            this.loadBottles(); // <<< RELOAD BOTTLES AFTER DELETION
         } catch (error) {
             console.error('Failed to delete bottle:', error);
         }
@@ -191,7 +195,7 @@ const BottleManager = {
         try {
             await API.deleteBottleOperation(operationId);
             UI.showToast('Measurement deleted successfully!', 'success');
-            this.loadBottles();
+            this.loadBottles(); // <<< RELOAD BOTTLES AFTER DELETION
         } catch (error) {
             console.error('Failed to delete measurement:', error);
         }

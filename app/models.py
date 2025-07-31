@@ -38,7 +38,7 @@ class BottlesDB(Base, BaseModelMixin):
     __tablename__ = "bottles"
 
     purchase_date: Mapped[date_] = mapped_column(nullable=False)
-    purchpase_price: Mapped[float] = mapped_column(nullable=False)
+    purchase_price: Mapped[float] = mapped_column(nullable=False)
     initial_weight: Mapped[float] = mapped_column(nullable=False)
     filling_weight: Mapped[float] = mapped_column(nullable=False)
     active: Mapped[bool] = mapped_column(default=True, nullable=False)

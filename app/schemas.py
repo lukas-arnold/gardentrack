@@ -66,7 +66,7 @@ class BottleOperationRead(BottleOperationBase, BaseModelSchema):
 
 class BottleBase(BaseModel):
     purchase_date: date_ = Field(..., description="Date the gas bottle was purchased.")
-    purchpase_price: float = Field(..., description="Purchase price of the gas bottle.")
+    purchase_price: float = Field(..., description="Purchase price of the gas bottle.")
     initial_weight: float = Field(
         ..., description="Initial weight of the complete gas bottle when purchased."
     )
