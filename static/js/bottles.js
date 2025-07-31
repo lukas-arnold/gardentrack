@@ -1,7 +1,8 @@
 const BottleManager = {
     init() {
-        this.showInactiveBottles = false; // New state to track visibility of inactive bottles
-        this.currentChart = null; // To store the Chart.js instance
+        this.showInactiveBottles = false;
+        this.currentChart = null; // For the consumption chart
+        this.historyChart = null; // New: To store the history Chart.js instance
         this.bindEvents();
         this.loadBottles();
     },
@@ -22,19 +23,21 @@ const BottleManager = {
             const bottles = await API.getBottles();
             const grid = document.getElementById('bottle-list');
             if (grid) {
-                // Filter bottles based on showInactiveBottles state
                 const bottlesToDisplay = this.showInactiveBottles ? bottles : bottles.filter(bottle => bottle.active);
 
                 if (bottlesToDisplay.length === 0) {
                     grid.innerHTML = UI.createEmptyState('gas-pump', 'Keine Gasflaschen', 'Füge deine erste Gasflasche hinzu, um den Verbrauch zu verfolgen.');
-                    // Destroy chart if no bottles are displayed
                     if (this.currentChart) {
                         this.currentChart.destroy();
                         this.currentChart = null;
                     }
+                    if (this.historyChart) { // Destroy history chart as well
+                        this.historyChart.destroy();
+                        this.historyChart = null;
+                    }
                 } else {
                     grid.innerHTML = bottlesToDisplay.map(bottle => this.createBottleCard(bottle)).join('');
-                    // Update chart with active bottles
+
                     const activeBottlesForChart = bottlesToDisplay.filter(b => b.active).map(bottle => {
                         const lastOperation = bottle.operations ? [...bottle.operations].sort((a, b) => new Date(b.date) - new Date(a.date))[0] : null;
                         const currentWeight = lastOperation?.weight !== undefined ? lastOperation.weight : bottle.initial_weight;
@@ -46,9 +49,13 @@ const BottleManager = {
                         };
                     });
                     this.updateConsumptionChart(activeBottlesForChart);
+
+                    // New: Prepare data and update history chart for active bottles
+                    const activeBottlesWithHistory = bottlesToDisplay.filter(b => b.active);
+                    this.updateBottleHistoryChart(activeBottlesWithHistory);
                 }
                 this.bindBottleCardEvents();
-                this.updateToggleButtonStyle(); // Update button style on load
+                this.updateToggleButtonStyle();
             }
         } catch (error) {
             console.error('Failed to load bottles:', error);
@@ -56,17 +63,20 @@ const BottleManager = {
             if (grid) {
                 grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Gasflaschen', 'Gasflaschendaten konnten nicht geladen werden.');
             }
-            // Destroy chart on error
             if (this.currentChart) {
                 this.currentChart.destroy();
                 this.currentChart = null;
+            }
+            if (this.historyChart) { // Destroy history chart on error
+                this.historyChart.destroy();
+                this.historyChart = null;
             }
         }
     },
 
     createBottleCard(bottle) {
+        // ... (existing createBottleCard code) ...
         const operationsCount = bottle.operations?.length || 0;
-        // Sort operations by date in descending order to get the latest first
         const sortedOperations = bottle.operations ? [...bottle.operations].sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
         const lastOperation = sortedOperations[0];
         const currentWeight = lastOperation?.weight !== undefined ? lastOperation.weight : bottle.initial_weight;
@@ -331,7 +341,7 @@ const BottleManager = {
             this.currentChart.destroy();
         }
 
-        const labels = bottles.map(bottle => `Flasche #${bottle.id}`); // Using bottle.id for labels
+        const labels = bottles.map(bottle => `Flasche #${bottle.id}`);
         const data = bottles.map(bottle => bottle.percentage);
         const backgroundColors = bottles.map(bottle => {
             if (bottle.percentage >= 50) return 'rgba(46, 204, 113, 0.8)';
@@ -365,6 +375,111 @@ const BottleManager = {
                         ticks: {
                             callback: function(value) {
                                 return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    },
+
+    updateBottleHistoryChart(activeBottles) {
+        const ctx = document.getElementById('bottle-history-chart')?.getContext('2d'); // Assuming you have a canvas with this ID
+
+        if (!ctx) {
+            console.warn("Chart canvas element 'bottle-history-chart' not found. Please add a canvas element with id='bottle-history-chart' to your HTML.");
+            return;
+        }
+
+        if (this.historyChart) {
+            this.historyChart.destroy();
+        }
+
+        const datasets = activeBottles.map(bottle => {
+            // Sort operations by date in ascending order for the line chart
+            const sortedOperations = bottle.operations ? [...bottle.operations].sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
+
+            // Include initial weight as the first data point if there are operations
+            const dataPoints = [];
+            if (bottle.operations && bottle.operations.length > 0) {
+                // Add the initial weight as the starting point (date can be purchase date or first operation date)
+                dataPoints.push({
+                    x: Utils.formatDate(bottle.purchase_date), // Use purchase date as initial point
+                    y: bottle.initial_weight
+                });
+            } else {
+                // If no operations, just show initial weight (or nothing if you prefer)
+                dataPoints.push({
+                    x: Utils.formatDate(bottle.purchase_date),
+                    y: bottle.initial_weight
+                });
+            }
+
+
+            sortedOperations.forEach(op => {
+                dataPoints.push({
+                    x: Utils.formatDate(op.date),
+                    y: op.weight
+                });
+            });
+
+
+            return {
+                label: `Flasche #${bottle.id}`,
+                data: dataPoints,
+                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`, // Random color for each bottle
+                fill: false,
+                tension: 0.1
+            };
+        });
+
+        this.historyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Verlauf des Flaschengewichts (Aktive Flaschen)'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += Utils.formatWeight(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'category', // Use 'category' for discrete date labels
+                        labels: datasets.flatMap(dataset => dataset.data.map(point => point.x)).filter((value, index, self) => self.indexOf(value) === index).sort(), // Collect all unique dates and sort them
+                        title: {
+                            display: true,
+                            text: 'Datum'
+                        }
+                    },
+                    y: {
+                        beginAtZero: false, // Weight might not start at zero
+                        title: {
+                            display: true,
+                            text: 'Gewicht (kg)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return Utils.formatWeight(value);
                             }
                         }
                     }
