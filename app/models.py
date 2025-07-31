@@ -1,9 +1,13 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, ForeignKey, Boolean  # Import Boolean
+from sqlalchemy import Integer, ForeignKey, Boolean
 from datetime import date as date_
 
 
-class Base(DeclarativeBase):
+class BaseDevices(DeclarativeBase):
+    pass
+
+
+class BaseBottles(DeclarativeBase):
     pass
 
 
@@ -11,7 +15,7 @@ class BaseModelMixin:
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
 
-class DevicesDB(Base, BaseModelMixin):
+class DevicesDB(BaseDevices, BaseModelMixin):
     __tablename__ = "devices"
 
     name: Mapped[str] = mapped_column(nullable=False)
@@ -24,7 +28,7 @@ class DevicesDB(Base, BaseModelMixin):
     )
 
 
-class DeviceOperationsDB(Base, BaseModelMixin):
+class DeviceOperationsDB(BaseDevices, BaseModelMixin):
     __tablename__ = "device_operations"
 
     device_id: Mapped[int] = mapped_column(ForeignKey("devices.id"), nullable=False)
@@ -35,7 +39,7 @@ class DeviceOperationsDB(Base, BaseModelMixin):
     device: Mapped["DevicesDB"] = relationship(back_populates="operations")
 
 
-class BottlesDB(Base, BaseModelMixin):
+class BottlesDB(BaseBottles, BaseModelMixin):
     __tablename__ = "bottles"
 
     purchase_date: Mapped[date_] = mapped_column(nullable=False)
@@ -51,7 +55,7 @@ class BottlesDB(Base, BaseModelMixin):
     )
 
 
-class BottleOperationsDB(Base, BaseModelMixin):
+class BottleOperationsDB(BaseBottles, BaseModelMixin):
     __tablename__ = "bottle_operations"
 
     bottle_id: Mapped[int] = mapped_column(ForeignKey("bottles.id"), nullable=False)
