@@ -5,7 +5,6 @@ from typing import List
 from app import db_operations, schemas
 from app.database import get_db_devices, get_db_bottles
 
-# Routers for different parts of the application
 router_devices = APIRouter(
     prefix="/devices",
     tags=["devices"],
@@ -27,6 +26,9 @@ router_bottles = APIRouter(
 def create_device(device: schemas.DeviceCreate, db: Session = Depends(get_db_devices)):
     """
     Create a new device.
+
+    This endpoint accepts a `DeviceCreate` schema and creates a new device entry
+    in the database, returning the newly created device data.
     """
     return db_operations.create_device(db=db, device=device)
 
@@ -37,6 +39,9 @@ def read_devices(
 ):
     """
     Retrieve a list of all devices.
+
+    This endpoint supports pagination with `skip` and `limit` query parameters
+    to control the number of results returned.
     """
     devices = db_operations.get_devices(db, skip=skip, limit=limit)
     return devices
@@ -46,6 +51,8 @@ def read_devices(
 def read_device(device_id: int, db: Session = Depends(get_db_devices)):
     """
     Retrieve a single device by its ID.
+
+    If a device with the given `device_id` is not found, a 404 error is raised.
     """
     db_device = db_operations.get_device(db, device_id=device_id)
     if db_device is None:
@@ -61,6 +68,9 @@ def update_device(
 ):
     """
     Update an existing device by its ID.
+
+    Accepts a `DeviceUpdate` schema to modify an existing device.
+    Raises a 404 error if the device is not found.
     """
     db_device = db_operations.get_device(db, device_id=device_id)
     if db_device is None:
@@ -74,12 +84,17 @@ def update_device(
 def delete_device(device_id: int, db: Session = Depends(get_db_devices)):
     """
     Delete a device by its ID.
+
+    Removes a device from the database. A 404 error is raised if the device is
+    not found.
     """
     db_device = db_operations.delete_device(db, device_id=device_id)
     if db_device is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Device not found"
         )
+    # The HTTP_204_NO_CONTENT status code means no content is returned,
+    # but a success message is provided here for clarity.
     return {"message": "Device deleted successfully"}
 
 
@@ -98,6 +113,9 @@ def create_device_operation_for_device(
 ):
     """
     Create a new operation for a specific device.
+
+    The `device_id` from the URL path is used to associate the new operation
+    with the correct device. A 404 is returned if the device doesn't exist.
     """
     db_device = db_operations.get_device(db, device_id=device_id)
     if db_device is None:
@@ -120,6 +138,9 @@ def read_device_operations_for_device(
 ):
     """
     Retrieve a list of operations for a specific device.
+
+    Returns all operations associated with a `device_id`, with support for
+    pagination. Raises a 404 error if the device does not exist.
     """
     db_device = db_operations.get_device(db, device_id=device_id)
     if db_device is None:
@@ -138,6 +159,8 @@ def read_device_operations_for_device(
 def read_device_operation(operation_id: int, db: Session = Depends(get_db_devices)):
     """
     Retrieve a single device operation by its ID.
+
+    Raises a 404 error if the operation is not found.
     """
     db_operation = db_operations.get_device_operation(db, operation_id=operation_id)
     if db_operation is None:
@@ -153,6 +176,9 @@ def read_device_operation(operation_id: int, db: Session = Depends(get_db_device
 def delete_device_operation(operation_id: int, db: Session = Depends(get_db_devices)):
     """
     Delete a device operation by its ID.
+
+    Removes a specific operation from the database. A 404 error is raised
+    if the operation is not found.
     """
     db_operation = db_operations.delete_device_operation(db, operation_id=operation_id)
     if db_operation is None:
