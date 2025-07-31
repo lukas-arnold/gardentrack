@@ -1,6 +1,7 @@
 const BottleManager = {
     init() {
         this.showInactiveBottles = false; // New state to track visibility of inactive bottles
+        this.currentChart = null; // To store the Chart.js instance
         this.bindEvents();
         this.loadBottles();
     },
@@ -26,8 +27,25 @@ const BottleManager = {
 
                 if (bottlesToDisplay.length === 0) {
                     grid.innerHTML = UI.createEmptyState('gas-pump', 'Keine Gasflaschen', 'Füge deine erste Gasflasche hinzu, um den Verbrauch zu verfolgen.');
+                    // Destroy chart if no bottles are displayed
+                    if (this.currentChart) {
+                        this.currentChart.destroy();
+                        this.currentChart = null;
+                    }
                 } else {
                     grid.innerHTML = bottlesToDisplay.map(bottle => this.createBottleCard(bottle)).join('');
+                    // Update chart with active bottles
+                    const activeBottlesForChart = bottlesToDisplay.filter(b => b.active).map(bottle => {
+                        const lastOperation = bottle.operations ? [...bottle.operations].sort((a, b) => new Date(b.date) - new Date(a.date))[0] : null;
+                        const currentWeight = lastOperation?.weight !== undefined ? lastOperation.weight : bottle.initial_weight;
+                        const bottleWeight = bottle.initial_weight - bottle.filling_weight;
+                        const remainingPercentage = bottleWeight > 0 ? (((currentWeight - bottle.filling_weight) / bottleWeight) * 100) : 0;
+                        return {
+                            id: bottle.id,
+                            percentage: parseFloat(remainingPercentage.toFixed(1))
+                        };
+                    });
+                    this.updateConsumptionChart(activeBottlesForChart);
                 }
                 this.bindBottleCardEvents();
                 this.updateToggleButtonStyle(); // Update button style on load
@@ -37,6 +55,11 @@ const BottleManager = {
             const grid = document.getElementById('bottle-list');
             if (grid) {
                 grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Gasflaschen', 'Gasflaschendaten konnten nicht geladen werden.');
+            }
+            // Destroy chart on error
+            if (this.currentChart) {
+                this.currentChart.destroy();
+                this.currentChart = null;
             }
         }
     },
@@ -50,7 +73,7 @@ const BottleManager = {
 
         const bottleWeight = bottle.initial_weight - bottle.filling_weight;
         const totalUsedGas = (bottle.initial_weight - currentWeight).toFixed(1);
-        const remainingPercentage = bottleWeight > 0 ? (((currentWeight - bottle.filling_weight) / bottleWeight) * 100).toFixed(1) : (0).toFixed(1);
+        const remainingGasKg = (currentWeight - bottle.filling_weight).toFixed(1);
 
         return `
             <div class="card ${!bottle.active && !this.showInactiveBottles ? 'hidden-inactive' : ''}" data-bottle-id="${bottle.id}">
@@ -86,7 +109,7 @@ const BottleManager = {
                             <span class="info-value">${Utils.formatCurrency(bottle.purchase_price)}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Startgewicht</span>
+                            <span class="info-label">Anfangsgewicht</span>
                             <span class="info-value">${Utils.formatWeight(bottle.initial_weight)}</span>
                         </div>
                         <div class="info-item">
@@ -99,7 +122,7 @@ const BottleManager = {
                         </div>
                         <div class="info-item">
                             <span class="info-label">Restliches Gas</span>
-                            <span class="info-value">${remainingPercentage}%</span>
+                            <span class="info-value">${Utils.formatWeight(remainingGasKg)}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Gesamtverbrauch</span>
@@ -111,17 +134,14 @@ const BottleManager = {
                         <div class="operations-count">${operationsCount} Messung${operationsCount !== 1 ? 'en' : ''}</div>
                         ${sortedOperations.slice(0, 3).map((op, index) => {
                             let usedGasForOperation = 0;
-                            // Calculate gas used for this specific operation
-                            if (index < sortedOperations.length - 1) { // If it's not the last operation in the sorted list (i.e., there's a previous one)
+                            if (index < sortedOperations.length - 1) {
                                 const previousOperation = sortedOperations[index + 1];
                                 usedGasForOperation = (previousOperation.weight - op.weight).toFixed(1);
-                            } else if (index === sortedOperations.length - 1 && bottle.operations.length > 1) { // If it's the oldest operation and there are more than 1 operation
-                                // This is the first operation recorded, calculate from initial_weight
+                            } else if (index === sortedOperations.length - 1 && bottle.operations.length > 1) {
                                 usedGasForOperation = (bottle.initial_weight - op.weight).toFixed(1);
-                            } else if (bottle.operations.length === 1) { // Only one operation recorded
+                            } else if (bottle.operations.length === 1) {
                                 usedGasForOperation = (bottle.initial_weight - op.weight).toFixed(1);
                             }
-
 
                             return `
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.9em; color: var(--text-secondary);">
@@ -171,11 +191,9 @@ const BottleManager = {
             };
         });
 
-        // Event listener for "Alle Messungen anzeigen" button (if you implement a full view)
         document.querySelectorAll('.view-all-operations-btn').forEach(button => {
             button.onclick = (e) => {
                 const bottleId = e.currentTarget.dataset.bottleId;
-                // Implement logic to show all operations for this bottle, e.g., in a separate modal or page
                 console.log(`View all operations for bottle ${bottleId}`);
                 UI.showToast('Funktion zum Anzeigen aller Messungen ist noch nicht implementiert.', 'info');
             };
@@ -192,7 +210,7 @@ const BottleManager = {
                 purchase_price: parseFloat(formData.get('purchase_price')),
                 initial_weight: parseFloat(formData.get('initial_weight')),
                 filling_weight: parseFloat(formData.get('filling_weight')),
-                active: true // New bottles are active by default
+                active: true
             };
 
             await API.createBottle(bottle);
@@ -213,17 +231,17 @@ const BottleManager = {
         if (isNaN(bottleIdAsNumber)) {
             console.error('Invalid bottle ID for operation:', targetId);
             UI.showToast('Fehler: Flaschen-ID für Messung konnte nicht ermittelt werden.', 'error');
-            return; // Stop execution
+            return;
         }
 
         try {
             const operation = {
-                bottle_id: bottleIdAsNumber, // Add bottle_id here
+                bottle_id: bottleIdAsNumber,
                 date: formData.get('date'),
                 weight: parseFloat(formData.get('weight')),
                 note: formData.get('note') || null
             };
-            await API.createBottleOperation(operation); // Pass the complete operation object
+            await API.createBottleOperation(operation);
             UI.showToast('Gewichtsmessung erfolgreich hinzugefügt!', 'success');
             UI.hideModal('operation-modal');
             UI.clearForm('operation-form');
@@ -282,7 +300,7 @@ const BottleManager = {
 
     toggleInactiveBottleVisibility() {
         this.showInactiveBottles = !this.showInactiveBottles;
-        this.loadBottles(); // Reload bottles to apply the filter
+        this.loadBottles();
         this.updateToggleButtonStyle();
     },
 
@@ -299,5 +317,59 @@ const BottleManager = {
                 toggleButton.classList.add('btn-secondary');
             }
         }
+    },
+
+    updateConsumptionChart(bottles) {
+        const ctx = document.getElementById('consumption-chart')?.getContext('2d');
+
+        if (!ctx) {
+            console.warn("Chart canvas element 'consumption-chart' not found.");
+            return;
+        }
+
+        if (this.currentChart) {
+            this.currentChart.destroy();
+        }
+
+        const labels = bottles.map(bottle => `Flasche #${bottle.id}`); // Using bottle.id for labels
+        const data = bottles.map(bottle => bottle.percentage);
+        const backgroundColors = bottles.map(bottle => {
+            if (bottle.percentage >= 50) return 'rgba(46, 204, 113, 0.8)';
+            if (bottle.percentage >= 20) return 'rgba(243, 156, 18, 0.8)';
+            return 'rgba(231, 76, 60, 0.8)';
+        });
+
+        this.currentChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Füllstand (%)',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 };
