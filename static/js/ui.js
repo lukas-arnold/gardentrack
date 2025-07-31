@@ -1,15 +1,18 @@
 const UI = {
     showLoading(show) {
         const spinner = document.getElementById('loading-spinner');
-        if (show) {
-            spinner.classList.add('active');
-        } else {
-            spinner.classList.remove('active');
+        if (spinner) { // Check if spinner exists
+            if (show) {
+                spinner.classList.add('active');
+            } else {
+                spinner.classList.remove('active');
+            }
         }
     },
 
     showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
+        if (!container) return; // Ensure container exists
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.innerHTML = `
@@ -38,22 +41,28 @@ const UI = {
 
     showModal(modalId) {
         const modal = document.getElementById(modalId);
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        if (modal) { // Check if modal exists
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
     },
 
     hideModal(modalId) {
         const modal = document.getElementById(modalId);
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
+        if (modal) { // Check if modal exists
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     },
 
     clearForm(formId) {
         const form = document.getElementById(formId);
-        form.reset();
-        // Reset any custom states
-        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = cb.hasAttribute('checked'));
+        if (form) { // Check if form exists
+            form.reset();
+            // Reset any custom states for checkboxes (if needed)
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = cb.hasAttribute('checked'));
+        }
     },
 
     createEmptyState(icon, title, description) {
@@ -66,17 +75,34 @@ const UI = {
         `;
     },
 
-    switchTab(tabName) {
-        // Update nav tabs
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    showOperationModal(title, type, targetId) {
+        const operationModalTitle = document.getElementById('operation-modal-title');
+        const operationForm = document.getElementById('operation-form');
+        
+        if (!operationModalTitle || !operationForm) return; // Ensure elements exist
 
-        // Update sections
-        document.querySelectorAll('.section').forEach(section => {
-            section.classList.remove('active');
-        });
-        document.getElementById(`${tabName}-section`).classList.add('active');
-    }
+        operationModalTitle.textContent = title;
+        operationForm.dataset.type = type; // Set type to 'device' or 'bottle'
+        operationForm.dataset.targetId = targetId; // Set the ID of the device or bottle
+
+        // Set today's date as default
+        document.getElementById('operation-date').value = new Date().toISOString().split('T')[0];
+        
+        // Show/hide fields based on type
+        const durationGroup = document.getElementById('duration-group');
+        const weightGroup = document.getElementById('weight-group');
+        const noteGroup = document.getElementById('note-group');
+
+        if (type === 'device') {
+            if (durationGroup) durationGroup.style.display = 'block';
+            if (weightGroup) weightGroup.style.display = 'none';
+            if (noteGroup) noteGroup.style.display = 'block'; // Ensure note is visible for devices
+        } else if (type === 'bottle') {
+            if (durationGroup) durationGroup.style.display = 'none';
+            if (weightGroup) weightGroup.style.display = 'block';
+            if (noteGroup) noteGroup.style.display = 'none'; // Ensure note is hidden for bottles
+        }
+
+        this.showModal('operation-modal');
+    },
 };

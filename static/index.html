@@ -15,46 +15,21 @@
                 <span>GardenTrack</span>
             </div>
             <nav class="nav-tabs">
-                <button class="nav-tab active" data-tab="devices">
+                <a href="#" class="nav-tab active" data-tab="devices">
                     <i class="fas fa-tools"></i>
                     <span>Devices</span>
-                </button>
-                <button class="nav-tab" data-tab="bottles">
+                </a>
+                <a href="#" class="nav-tab" data-tab="bottles">
                     <i class="fas fa-gas-pump"></i>
                     <span>Bottles</span>
-                </button>
+                </a>
             </nav>
         </div>
     </header>
 
     <main class="main">
-        <div class="container">
-            <section id="devices-section" class="section active">
-                <div class="section-header">
-                    <h1>Device Management</h1>
-                    <button class="btn btn-primary" id="add-device-btn">
-                        <i class="fas fa-plus"></i>
-                        Add Device
-                    </button>
-                </div>
-                
-                <div class="cards-grid" id="devices-grid">
-                    </div>
-            </section>
-
-            <section id="bottles-section" class="section">
-                <div class="section-header">
-                    <h1>Gas Bottle Management</h1>
-                    <button class="btn btn-primary" id="add-bottle-btn">
-                        <i class="fas fa-plus"></i>
-                        Add Bottle
-                    </button>
-                </div>
-                
-                <div class="cards-grid" id="bottles-grid">
-                    </div>
-            </section>
-        </div>
+        <div class="container" id="content-area">
+            </div>
     </main>
 
     <div class="loading-spinner" id="loading-spinner">
@@ -161,8 +136,6 @@
     <script src="/static/js/utils.js"></script>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/ui.js"></script>
-    <script src="/static/js/devices.js"></script>
-    <script src="/static/js/bottles.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/devices.js"></script> <script src="/static/js/bottles.js"></script> <script src="/static/js/app.js"></script>
 </body>
 </html>

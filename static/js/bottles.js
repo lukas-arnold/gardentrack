@@ -1,30 +1,46 @@
 const BottleManager = {
+    init() {
+        this.bindEvents();
+        this.loadBottles();
+    },
+
+    bindEvents() {
+        // Event listeners for elements that are part of the dynamically loaded content
+        document.getElementById('add-bottle-btn')?.addEventListener('click', () => {
+            UI.clearForm('bottle-form');
+            UI.showModal('bottle-modal');
+        });
+
+        // The bottle form is now global (in index.html),
+        // so its submit handler can be directly attached in App.js's rebindSharedFormSubmissions.
+    },
+
     async loadBottles() {
         try {
             const bottles = await API.getBottles();
-            this.renderBottles(bottles);
+            const grid = document.getElementById('bottle-list');
+            if (grid) {
+                if (bottles.length === 0) {
+                    grid.innerHTML = UI.createEmptyState('gas-pump', 'No Gas Bottles', 'Start by adding your first gas bottle to track usage.');
+                } else {
+                    grid.innerHTML = bottles.map(bottle => this.createBottleCard(bottle)).join('');
+                }
+                this.bindBottleCardEvents(); // Re-bind events for newly rendered cards
+            }
         } catch (error) {
             console.error('Failed to load bottles:', error);
-            this.renderBottles([]);
+            const grid = document.getElementById('bottle-list');
+            if (grid) {
+                grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Error Loading Bottles', 'Failed to load bottle data.');
+            }
         }
-    },
-
-    renderBottles(bottles) {
-        const grid = document.getElementById('bottles-grid');
-        
-        if (bottles.length === 0) {
-            grid.innerHTML = UI.createEmptyState('gas-pump', 'No Gas Bottles', 'Start by adding your first gas bottle to track usage.');
-            return;
-        }
-
-        grid.innerHTML = bottles.map(bottle => this.createBottleCard(bottle)).join('');
     },
 
     createBottleCard(bottle) {
         const operationsCount = bottle.operations?.length || 0;
         const lastOperation = bottle.operations?.[0];
-        const currentWeight = lastOperation?.weight || bottle.initial_weight;
-        const usedGas = bottle.initial_weight - currentWeight;
+        const currentWeight = lastOperation?.weight !== undefined ? lastOperation.weight : bottle.initial_weight;
+        const usedGas = (bottle.initial_weight - currentWeight).toFixed(1);
         const remainingPercentage = ((currentWeight - (bottle.initial_weight - bottle.filling_weight)) / bottle.filling_weight * 100).toFixed(1);
 
         return `
@@ -39,10 +55,10 @@ const BottleManager = {
                             <i class="fas fa-circle" style="font-size: 0.6em;"></i>
                             ${bottle.active ? 'Active' : 'Inactive'}
                         </span>
-                        <button class="btn btn-sm btn-primary" onclick="BottleManager.addOperation(${bottle.id})">
+                        <button class="btn btn-sm btn-primary add-operation-btn" data-id="${bottle.id}" data-type="bottle">
                             <i class="fas fa-plus"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="BottleManager.deleteBottle(${bottle.id})">
+                        <button class="btn btn-sm btn-danger delete-bottle-btn" data-id="${bottle.id}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -55,7 +71,7 @@ const BottleManager = {
                         </div>
                         <div class="info-item">
                             <span class="info-label">Purchase Price</span>
-                            <span class="info-value">${Utils.formatCurrency(bottle.purchpase_price)}</span>
+                            <span class="info-value">${Utils.formatCurrency(bottle.purchase_price)}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Current Weight</span>
@@ -77,7 +93,7 @@ const BottleManager = {
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.9em; color: var(--text-secondary);">
                                 <span>${Utils.formatDate(op.date)}</span>
                                 <span>${Utils.formatWeight(op.weight)}</span>
-                                <button class="btn btn-sm btn-danger" onclick="BottleManager.deleteOperation(${op.id})" style="padding: 2px 6px; font-size: 0.7em;">
+                                <button class="btn btn-sm btn-danger delete-operation-btn" data-operation-id="${op.id}" data-type="bottle" style="padding: 2px 6px; font-size: 0.7em;">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -88,41 +104,68 @@ const BottleManager = {
         `;
     },
 
-    async addOperation(bottleId) {
-        const modal = document.getElementById('operation-modal');
-        const form = document.getElementById('operation-form');
-        const title = document.getElementById('operation-modal-title');
-        
-        title.textContent = 'Add Weight Measurement';
-        
-        // Show bottle operation fields
-        document.getElementById('duration-group').style.display = 'none';
-        document.getElementById('weight-group').style.display = 'block';
-        document.getElementById('note-group').style.display = 'none';
-        
-        // Set today's date as default
-        document.getElementById('operation-date').value = new Date().toISOString().split('T')[0];
-        
-        // Store bottle ID for form submission
-        form.dataset.bottleId = bottleId;
-        form.dataset.type = 'bottle';
-        
-        UI.showModal('operation-modal');
+    bindBottleCardEvents() {
+        document.querySelectorAll('.add-operation-btn[data-type="bottle"]').forEach(button => {
+            button.onclick = (e) => {
+                const bottleId = e.currentTarget.dataset.id;
+                UI.showOperationModal('Add Weight Measurement', 'bottle', bottleId);
+            };
+        });
+
+        document.querySelectorAll('.delete-bottle-btn').forEach(button => {
+            button.onclick = async (e) => {
+                const bottleId = e.currentTarget.dataset.id;
+                await this.deleteBottle(bottleId);
+            };
+        });
+
+        document.querySelectorAll('.delete-operation-btn[data-type="bottle"]').forEach(button => {
+            button.onclick = async (e) => {
+                const operationId = e.currentTarget.dataset.operationId;
+                await this.deleteOperation(operationId);
+            };
+        });
     },
 
-    async submitOperation(formData) {
+    // Form submission handler for bottle creation (now global)
+    handleBottleFormSubmit: async function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        try {
+            const bottle = {
+                purchase_date: formData.get('purchase_date'),
+                purchase_price: parseFloat(formData.get('purchase_price')),
+                initial_weight: parseFloat(formData.get('initial_weight')),
+                filling_weight: parseFloat(formData.get('filling_weight')),
+                active: formData.get('active') === 'on'
+            };
+
+            await API.createBottle(bottle);
+            UI.showToast('Gas bottle created successfully!', 'success');
+            UI.hideModal('bottle-modal');
+            UI.clearForm('bottle-form');
+            BottleManager.loadBottles(); // Use BottleManager.loadBottles()
+        } catch (error) {
+            console.error('Failed to create bottle:', error);
+        }
+    },
+
+    // Form submission handler for operations (delegated from App.js)
+    submitOperation: async function(formData, targetId) {
         try {
             const operation = {
                 date: formData.get('date'),
-                weight: parseFloat(formData.get('weight'))
+                weight: parseFloat(formData.get('weight')),
+                note: formData.get('note') || null
             };
-
-            await API.createBottleOperation(parseInt(formData.get('bottleId')), operation);
+            await API.createBottleOperation(parseInt(targetId), operation);
             UI.showToast('Weight measurement added successfully!', 'success');
             UI.hideModal('operation-modal');
+            UI.clearForm('operation-form');
             this.loadBottles();
         } catch (error) {
-            console.error('Failed to add measurement:', error);
+            console.error('Failed to add bottle operation:', error);
         }
     },
 

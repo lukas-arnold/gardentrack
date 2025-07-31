@@ -1,23 +1,41 @@
 const DeviceManager = {
+    init() {
+        this.bindEvents();
+        this.loadDevices();
+    },
+
+    bindEvents() {
+        // Event listeners for elements that are part of the dynamically loaded content
+        // These need to be re-bound every time the devices.html content is loaded.
+        document.getElementById('add-device-btn')?.addEventListener('click', () => {
+            UI.clearForm('device-form');
+            UI.showModal('device-modal');
+        });
+
+        // The device and bottle forms are now global (in index.html),
+        // so their submit handlers can be directly attached in App.js's rebindSharedFormSubmissions.
+        // We just need to ensure the manager provides the handler.
+    },
+
     async loadDevices() {
         try {
             const devices = await API.getDevices();
-            this.renderDevices(devices);
+            const grid = document.getElementById('device-list');
+            if (grid) {
+                if (devices.length === 0) {
+                    grid.innerHTML = UI.createEmptyState('tools', 'No Devices', 'Start by adding your first device to track operations.');
+                } else {
+                    grid.innerHTML = devices.map(device => this.createDeviceCard(device)).join('');
+                }
+                this.bindDeviceCardEvents(); // Re-bind events for newly rendered cards
+            }
         } catch (error) {
             console.error('Failed to load devices:', error);
-            this.renderDevices([]);
+            const grid = document.getElementById('device-list');
+            if (grid) {
+                grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Error Loading Devices', 'Failed to load device data.');
+            }
         }
-    },
-
-    renderDevices(devices) {
-        const grid = document.getElementById('devices-grid');
-        
-        if (devices.length === 0) {
-            grid.innerHTML = UI.createEmptyState('tools', 'No Devices', 'Start by adding your first device to track operations.');
-            return;
-        }
-
-        grid.innerHTML = devices.map(device => this.createDeviceCard(device)).join('');
     },
 
     createDeviceCard(device) {
@@ -33,10 +51,10 @@ const DeviceManager = {
                         ${device.name}
                     </h3>
                     <div class="card-actions">
-                        <button class="btn btn-sm btn-primary" onclick="DeviceManager.addOperation(${device.id})">
+                        <button class="btn btn-sm btn-primary add-operation-btn" data-id="${device.id}" data-type="device">
                             <i class="fas fa-plus"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="DeviceManager.deleteDevice(${device.id})">
+                        <button class="btn btn-sm btn-danger delete-device-btn" data-id="${device.id}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -64,7 +82,7 @@ const DeviceManager = {
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.9em; color: var(--text-secondary);">
                                 <span>${Utils.formatDate(op.date)}</span>
                                 <span>${Utils.formatDuration(op.duration)}</span>
-                                <button class="btn btn-sm btn-danger" onclick="DeviceManager.deleteOperation(${op.id})" style="padding: 2px 6px; font-size: 0.7em;">
+                                <button class="btn btn-sm btn-danger delete-operation-btn" data-operation-id="${op.id}" data-type="device" style="padding: 2px 6px; font-size: 0.7em;">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -75,42 +93,64 @@ const DeviceManager = {
         `;
     },
 
-    async addOperation(deviceId) {
-        const modal = document.getElementById('operation-modal');
-        const form = document.getElementById('operation-form');
-        const title = document.getElementById('operation-modal-title');
-        
-        title.textContent = 'Add Device Operation';
-        
-        // Show device operation fields
-        document.getElementById('duration-group').style.display = 'block';
-        document.getElementById('weight-group').style.display = 'none';
-        document.getElementById('note-group').style.display = 'block';
-        
-        // Set today's date as default
-        document.getElementById('operation-date').value = new Date().toISOString().split('T')[0];
-        
-        // Store device ID for form submission
-        form.dataset.deviceId = deviceId;
-        form.dataset.type = 'device';
-        
-        UI.showModal('operation-modal');
+    bindDeviceCardEvents() {
+        document.querySelectorAll('.add-operation-btn[data-type="device"]').forEach(button => {
+            button.onclick = (e) => {
+                const deviceId = e.currentTarget.dataset.id;
+                UI.showOperationModal('Add Device Operation', 'device', deviceId);
+            };
+        });
+
+        document.querySelectorAll('.delete-device-btn').forEach(button => {
+            button.onclick = async (e) => {
+                const deviceId = e.currentTarget.dataset.id;
+                await this.deleteDevice(deviceId);
+            };
+        });
+
+        document.querySelectorAll('.delete-operation-btn[data-type="device"]').forEach(button => {
+            button.onclick = async (e) => {
+                const operationId = e.currentTarget.dataset.operationId;
+                await this.deleteOperation(operationId);
+            };
+        });
     },
 
-    async submitOperation(formData) {
+    // Form submission handler for device creation (now global)
+    handleDeviceFormSubmit: async function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        try {
+            const device = {
+                name: formData.get('name')
+            };
+
+            await API.createDevice(device);
+            UI.showToast('Device created successfully!', 'success');
+            UI.hideModal('device-modal');
+            UI.clearForm('device-form');
+            DeviceManager.loadDevices(); // Use DeviceManager.loadDevices()
+        } catch (error) {
+            console.error('Failed to create device:', error);
+        }
+    },
+
+    // Form submission handler for operations (delegated from App.js)
+    submitOperation: async function(formData, targetId) {
         try {
             const operation = {
                 date: formData.get('date'),
                 duration: parseInt(formData.get('duration')),
                 note: formData.get('note') || null
             };
-
-            await API.createDeviceOperation(parseInt(formData.get('deviceId')), operation);
+            await API.createDeviceOperation(parseInt(targetId), operation);
             UI.showToast('Operation added successfully!', 'success');
             UI.hideModal('operation-modal');
+            UI.clearForm('operation-form');
             this.loadDevices();
         } catch (error) {
-            console.error('Failed to add operation:', error);
+            console.error('Failed to add device operation:', error);
         }
     },
 
