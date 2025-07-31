@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload  # Added selectinload
 from typing import List, Optional
 
 from app.models import DevicesDB, DeviceOperationsDB, BottlesDB, BottleOperationsDB
@@ -16,14 +16,27 @@ def get_device(db: Session, device_id: int) -> Optional[DevicesDB]:
     """
     Retrieves a single device by its ID.
     """
-    return db.query(DevicesDB).filter(DevicesDB.id == device_id).first()
+    # Eagerly load operations for a single device as well
+    return (
+        db.query(DevicesDB)
+        .options(selectinload(DevicesDB.operations))
+        .filter(DevicesDB.id == device_id)
+        .first()
+    )
 
 
 def get_devices(db: Session, skip: int = 0, limit: int = 100) -> List[DevicesDB]:
     """
     Retrieves a list of devices.
     """
-    return db.query(DevicesDB).offset(skip).limit(limit).all()
+    # Eagerly load operations for all devices
+    return (
+        db.query(DevicesDB)
+        .options(selectinload(DevicesDB.operations))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
 
 def create_device(db: Session, device: DeviceCreate) -> DevicesDB:
@@ -116,14 +129,27 @@ def get_bottle(db: Session, bottle_id: int) -> Optional[BottlesDB]:
     """
     Retrieves a single bottle by its ID.
     """
-    return db.query(BottlesDB).filter(BottlesDB.id == bottle_id).first()
+    # Eagerly load operations for a single bottle as well
+    return (
+        db.query(BottlesDB)
+        .options(selectinload(BottlesDB.operations))
+        .filter(BottlesDB.id == bottle_id)
+        .first()
+    )
 
 
 def get_bottles(db: Session, skip: int = 0, limit: int = 100) -> List[BottlesDB]:
     """
     Retrieves a list of bottles.
     """
-    return db.query(BottlesDB).offset(skip).limit(limit).all()
+    # Eagerly load operations for all bottles
+    return (
+        db.query(BottlesDB)
+        .options(selectinload(BottlesDB.operations))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
 
 def create_bottle(db: Session, bottle: BottleCreate) -> BottlesDB:

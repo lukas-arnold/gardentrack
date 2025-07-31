@@ -1,13 +1,136 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GartenTrack</title>
+    <title>GardenTrack</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>GartenTrack</h1>
+    <header class="header">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="#" class="nav-tab-home">
+                    <i class="fas fa-seedling"></i>
+                    <span>GardenTrack</span>
+                </a>
+            </div>
+            <nav class="nav-tabs">
+                <a href="#" class="nav-tab active" data-tab="devices">
+                    <i class="fas fa-tools"></i>
+                    <span>Gartengeräte</span>
+                </a>
+                <a href="#" class="nav-tab" data-tab="bottles">
+                    <i class="fas fa-gas-pump"></i>
+                    <span>Gasflaschen</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container" id="content-area">
+            </div>
+    </main>
+
+    <div class="loading-spinner" id="loading-spinner">
+        <div class="spinner"></div>
     </div>
+
+    <div class="modal" id="device-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="device-modal-title">Gartengerät hinzufügen</h2>
+                <button class="modal-close" id="device-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="device-form">
+                <div class="form-group">
+                    <label for="device-name">Gerätename</label>
+                    <input type="text" id="device-name" name="name" required> 
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="device-cancel-btn">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Gerät speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="bottle-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="bottle-modal-title">Gasflasche hinzufügen</h2>
+                <button class="modal-close" id="bottle-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="bottle-form">
+                <div class="form-group">
+                    <label for="bottle-purchase-date">Kaufdatum</label>
+                    <input type="date" id="bottle-purchase-date" name="purchase_date" required> 
+                </div>
+                <div class="form-group">
+                    <label for="bottle-purchase-price">Kaufpreis (€)</label>
+                    <input type="number" id="bottle-purchase-price" name="purchase_price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="bottle-initial-weight">Anfangsgewicht (kg)</label>
+                    <input type="number" id="bottle-initial-weight" name="initial_weight" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="bottle-filling-weight">Füllmenge (kg)</label>
+                    <input type="number" id="bottle-filling-weight" name="filling_weight" step="0.1" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="bottle-cancel-btn">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Flasche speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="operation-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="operation-modal-title">Eintrag hinzufügen</h2>
+                <button class="modal-close" id="operation-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="operation-form">
+                <div class="form-group">
+                    <label for="operation-date">Datum</label>
+                    <input type="date" id="operation-date" name="date" required>
+                </div>
+                <div class="form-group" id="duration-group">
+                    <label for="operation-duration">Dauer (Minuten)</label>
+                    <input type="number" id="operation-duration" name="duration" min="1">
+                </div>
+                <div class="form-group" id="weight-group" style="display: none;">
+                    <label for="operation-weight">Gewicht (kg)</label>
+                    <input type="number" id="operation-weight" name="weight" step="0.1">
+                </div>
+                <div class="form-group" id="note-group">
+                    <label for="operation-note">Hinweis</label>
+                    <textarea id="operation-note" name="note" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="operation-cancel-btn">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Hinzufügen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script src="/static/js/devices.js"></script> <script src="/static/js/bottles.js"></script> <script src="/static/js/app.js"></script>
 </body>
 </html>
