@@ -1,0 +1,4 @@
+.venv
+devices.db
+gas.db
+__pycache__
