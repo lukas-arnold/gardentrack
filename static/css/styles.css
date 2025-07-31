@@ -100,6 +100,11 @@ body {
     color: white;
 }
 
+.nav-tab-home {
+    text-decoration: none;
+    color: inherit;
+}
+
 /* Main Content */
 .main {
     padding: var(--spacing-xl) 0;

@@ -59,6 +59,13 @@ const App = {
     },
 
     bindNavigationEvents() {
+        document.querySelectorAll('.nav-tab-home').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default link behavior
+                this.loadContent("devices");
+                this.setActiveTab("devices");
+            });
+        });
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 e.preventDefault(); // Prevent default link behavior
