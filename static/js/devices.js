@@ -343,6 +343,7 @@ const DeviceManager = {
                         ${filteredOperations.slice(0, 3).map(op => `
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.9em; color: var(--text-secondary);">
                                 <span>${Utils.formatDate(op.date)}</span>
+                                ${op.note ? `<span style="flex-grow: 1; margin: 0 8px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${op.note}</span>` : '<span style="flex-grow: 1; margin: 0 8px;"></span>'}
                                 <span>${Utils.formatDuration(op.duration)}</span>
                                 <button class="btn btn-sm btn-danger delete-operation-btn" data-operation-id="${op.id}" data-type="device" style="padding: 2px 6px; font-size: 0.7em;">
                                     <i class="fas fa-times"></i>
