@@ -1,5 +1,6 @@
 const DeviceManager = {
     init() {
+        this.showInactiveDevices = false; // New state to track visibility of inactive devices
         this.bindEvents();
         this.loadDevices();
     },
@@ -9,6 +10,10 @@ const DeviceManager = {
             UI.clearForm('device-form');
             UI.showModal('device-modal');
         });
+
+        document.getElementById('toggle-inactive-devices-btn')?.addEventListener('click', () => {
+            this.toggleInactiveDeviceVisibility();
+        });
     },
 
     async loadDevices() {
@@ -16,12 +21,16 @@ const DeviceManager = {
             const devices = await API.getDevices();
             const grid = document.getElementById('device-list');
             if (grid) {
-                if (devices.length === 0) {
+                // Filter devices based on showInactiveDevices state
+                const devicesToDisplay = this.showInactiveDevices ? devices : devices.filter(device => device.active);
+
+                if (devicesToDisplay.length === 0) {
                     grid.innerHTML = UI.createEmptyState('tools', 'Keine Geräte', 'Füge dein erstes Gerät hinzu, um Einsätze zu verfolgen.');
                 } else {
-                    grid.innerHTML = devices.map(device => this.createDeviceCard(device)).join('');
+                    grid.innerHTML = devicesToDisplay.map(device => this.createDeviceCard(device)).join('');
                 }
                 this.bindDeviceCardEvents();
+                this.updateToggleButtonStyle(); // Update button style on load
             }
         } catch (error) {
             console.error('Failed to load devices:', error);
@@ -38,15 +47,22 @@ const DeviceManager = {
         const totalDuration = device.operations?.reduce((sum, op) => sum + op.duration, 0) || 0;
 
         return `
-            <div class="card" data-device-id="${device.id}">
+            <div class="card ${!device.active && !this.showInactiveDevices ? 'hidden-inactive' : ''}" data-device-id="${device.id}">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-wrench"></i>
                         ${device.name}
                     </h3>
                     <div class="card-actions">
+                        <span class="status-badge ${device.active ? 'status-active' : 'status-inactive'}">
+                            <i class="fas fa-circle" style="font-size: 0.6em;"></i>
+                            ${device.active ? 'Aktiv' : 'Inaktiv'}
+                        </span>
                         <button class="btn btn-sm btn-primary add-operation-btn" data-id="${device.id}" data-type="device">
                             <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="btn btn-sm btn-${device.active ? 'secondary' : 'success'} toggle-active-btn" data-id="${device.id}" data-active="${device.active}">
+                            <i class="fas fa-${device.active ? 'archive' : 'undo'}"></i>
                         </button>
                         <button class="btn btn-sm btn-danger delete-device-btn" data-id="${device.id}">
                             <i class="fas fa-trash"></i>
@@ -91,7 +107,7 @@ const DeviceManager = {
         document.querySelectorAll('.add-operation-btn[data-type="device"]').forEach(button => {
             button.onclick = (e) => {
                 const deviceId = e.currentTarget.dataset.id;
-                UI.showOperationModal('Geräteoperation hinzufügen', 'device', deviceId);
+                UI.showOperationModal('Einsatz hinzufügen', 'device', deviceId);
             };
         });
 
@@ -108,15 +124,24 @@ const DeviceManager = {
                 await this.deleteOperation(operationId);
             };
         });
+
+        document.querySelectorAll('.toggle-active-btn').forEach(button => {
+            button.onclick = async (e) => {
+                const deviceId = e.currentTarget.dataset.id;
+                const currentActiveStatus = e.currentTarget.dataset.active === 'true';
+                await this.toggleDeviceActiveStatus(deviceId, !currentActiveStatus);
+            };
+        });
     },
 
     handleDeviceFormSubmit: async function(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
-        
+
         try {
             const device = {
-                name: formData.get('name')
+                name: formData.get('name'),
+                active: true // New devices are active by default
             };
 
             await API.createDevice(device);
@@ -143,7 +168,7 @@ const DeviceManager = {
             const operation = {
                 device_id: deviceIdAsNumber, // Add device_id here
                 date: formData.get('date'),
-                duration: parseInt(formData.get('duration')),
+                duration: parseInt(formData.get('duration'), 10),
                 note: formData.get('note') || null
             };
             await API.createDeviceOperation(operation); // Pass the complete operation object
@@ -181,6 +206,42 @@ const DeviceManager = {
             this.loadDevices();
         } catch (error) {
             console.error('Failed to delete operation:', error);
+        }
+    },
+
+    async toggleDeviceActiveStatus(deviceId, newStatus) {
+        const actionText = newStatus ? 'aktivieren' : 'deaktivieren';
+        if (!confirm(`Bist du sicher, dass du dieses Gerät ${actionText} möchtest?`)) {
+            return;
+        }
+
+        try {
+            await API.updateDevice(deviceId, { active: newStatus });
+            UI.showToast(`Gerät erfolgreich ${actionText}!`, 'success');
+            this.loadDevices();
+        } catch (error) {
+            console.error(`Failed to ${actionText} device:`, error);
+        }
+    },
+
+    toggleInactiveDeviceVisibility() {
+        this.showInactiveDevices = !this.showInactiveDevices;
+        this.loadDevices();
+        this.updateToggleButtonStyle();
+    },
+
+    updateToggleButtonStyle() {
+        const toggleButton = document.getElementById('toggle-inactive-devices-btn');
+        if (toggleButton) {
+            if (this.showInactiveDevices) {
+                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Inaktive ausblenden';
+                toggleButton.classList.remove('btn-secondary');
+                toggleButton.classList.add('btn-info');
+            } else {
+                toggleButton.innerHTML = '<i class="fas fa-eye"></i> Inaktive anzeigen';
+                toggleButton.classList.remove('btn-info');
+                toggleButton.classList.add('btn-secondary');
+            }
         }
     }
 };

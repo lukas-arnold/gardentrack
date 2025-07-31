@@ -65,6 +65,13 @@ const API = {
         });
     },
 
+    async updateDevice(id, deviceUpdates) {
+        return this.request(`${CONFIG.ENDPOINTS.DEVICES}/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(deviceUpdates)
+        });
+    },
+
     async deleteDevice(id) {
         return this.request(`${CONFIG.ENDPOINTS.DEVICES}/${id}`, {
             method: 'DELETE'

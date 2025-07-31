@@ -55,6 +55,21 @@ def read_device(device_id: int, db: Session = Depends(get_db_devices)):
     return db_device
 
 
+@router_devices.put("/{device_id}", response_model=schemas.DeviceRead)
+def update_device(
+    device_id: int, device: schemas.DeviceUpdate, db: Session = Depends(get_db_devices)
+):
+    """
+    Update an existing device by its ID.
+    """
+    db_device = db_operations.get_device(db, device_id=device_id)
+    if db_device is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Device not found"
+        )
+    return db_operations.update_device(db=db, db_device=db_device, device=device)
+
+
 @router_devices.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_device(device_id: int, db: Session = Depends(get_db_devices)):
     """

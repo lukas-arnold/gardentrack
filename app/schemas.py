@@ -32,10 +32,19 @@ class DeviceOperationRead(DeviceOperationBase, BaseModelSchema):
 
 class DeviceBase(BaseModel):
     name: str = Field(..., description="Name of the device.")
+    active: bool = Field(
+        True, description="Indicates if the device is currently active."
+    )
 
 
 class DeviceCreate(DeviceBase):
     pass
+
+
+class DeviceUpdate(BaseModel):
+    active: bool = Field(
+        ..., description="Indicates if the device is currently active."
+    )
 
 
 class DeviceRead(DeviceBase, BaseModelSchema):

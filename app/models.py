@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, ForeignKey
+from sqlalchemy import Integer, ForeignKey, Boolean  # Import Boolean
 from datetime import date as date_
 
 
@@ -15,6 +15,7 @@ class DevicesDB(Base, BaseModelMixin):
     __tablename__ = "devices"
 
     name: Mapped[str] = mapped_column(nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     operations: Mapped[list["DeviceOperationsDB"]] = relationship(
         back_populates="device",
@@ -29,7 +30,7 @@ class DeviceOperationsDB(Base, BaseModelMixin):
     device_id: Mapped[int] = mapped_column(ForeignKey("devices.id"), nullable=False)
     date: Mapped[date_] = mapped_column(nullable=False)
     duration: Mapped[int] = mapped_column(nullable=False)
-    note: Mapped[str | None] = mapped_column(nullable=True)
+    note: Mapped[str] = mapped_column(nullable=True)
 
     device: Mapped["DevicesDB"] = relationship(back_populates="operations")
 
@@ -41,7 +42,7 @@ class BottlesDB(Base, BaseModelMixin):
     purchase_price: Mapped[float] = mapped_column(nullable=False)
     initial_weight: Mapped[float] = mapped_column(nullable=False)
     filling_weight: Mapped[float] = mapped_column(nullable=False)
-    active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     operations: Mapped[list["BottleOperationsDB"]] = relationship(
         back_populates="bottle",
@@ -51,7 +52,7 @@ class BottlesDB(Base, BaseModelMixin):
 
 
 class BottleOperationsDB(Base, BaseModelMixin):
-    __tablename__ = "gas_operations"
+    __tablename__ = "bottle_operations"
 
     bottle_id: Mapped[int] = mapped_column(ForeignKey("bottles.id"), nullable=False)
     date: Mapped[date_] = mapped_column(nullable=False)
