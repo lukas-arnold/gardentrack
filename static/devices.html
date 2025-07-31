@@ -7,5 +7,31 @@
         <i class="fas fa-plus"></i> Gartengerät hinzufügen
     </button>
 </div>
-<div id="device-list" class="item-list">
+
+<div id="device-list" class="item-list"></div>
+<br>
+
+<div class="all-time-device-summary-section">
+    <h3>Gesamtstatistiken pro Gerät</h3>
+    <div class="statistics-grid" id="all-time-device-summary-grid">
+        </div>
+</div>
+
+<div class="charts-section">
+    <h3>Diagramme</h3>
+    <div class="filter-controls">
+        <label for="stats-year-filter">Jahr:</label>
+        <select id="stats-year-filter" class="form-control"></select>
     </div>
+    <div class="chart-container">
+        <h4>Monatliche Entwicklung</h4>
+        <canvas id="deviceOperationsLineChart"></canvas>
+    </div>
+    </div>
+
+
+<div class="statistics-overview-section">
+    <h3>Statistiken pro Gerät (Jahr)</h3>
+    <div class="statistics-grid" id="yearly-device-statistics">
+        </div>
+</div>

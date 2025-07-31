@@ -1,4 +1,6 @@
 /* CSS Styles for GardenTrack */
+
+/* 1. Global Variables */
 :root {
     --primary-color: #2563eb;
     --primary-hover: #1d4ed8;
@@ -15,13 +17,27 @@
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --border-radius: 8px;
     --border-radius-lg: 12px;
+    --border-radius-small: 4px; /* Added for consistency with form controls */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
+
+    /* Custom variables for specific components */
+    --card-bg: var(--surface-color);
+    --card-bg-light: #f1f5f9; /* Slightly lighter than surface for inner cards/elements */
+    --header-bg: var(--surface-color); /* For card headers, can be adjusted */
+    --input-bg: var(--surface-color);
+    --box-shadow: var(--shadow);
+    --box-shadow-small: 0 1px 2px 0 rgba(0,0,0,0.05); /* Lighter shadow for nested cards */
+    --primary-light: #6f42c1; /* For the gradient start color of yearly stats cards */
+    --card-gradient-start: #6f42c1; /* Matches previous purple */
+    --card-gradient-end: #8a2be2;   /* Matches previous purple */
+    --white-text: #ffffff;
 }
 
+/* 2. Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -41,7 +57,7 @@ body {
     padding: 0 var(--spacing-md);
 }
 
-/* Header */
+/* 3. Header and Navigation */
 .header {
     background: var(--surface-color);
     border-bottom: 1px solid var(--border-color);
@@ -88,6 +104,7 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.9rem;
+    text-decoration: none; /* Ensure it looks like a button */
 }
 
 .nav-tab:hover {
@@ -97,7 +114,7 @@ body {
 
 .nav-tab.active {
     background: var(--primary-color);
-    color: white;
+    color: var(--white-text);
 }
 
 .nav-tab-home {
@@ -105,7 +122,7 @@ body {
     color: inherit;
 }
 
-/* Main Content */
+/* 4. Main Content and Section Headers */
 .main {
     padding: var(--spacing-xl) 0;
 }
@@ -131,7 +148,27 @@ body {
     color: var(--text-primary);
 }
 
-/* Buttons */
+/* Common styling for all major sections (charts, all-time summary, yearly stats) */
+.charts-section,
+.all-time-device-summary-section,
+.statistics-overview-section {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.charts-section h3,
+.all-time-device-summary-section h3,
+.statistics-overview-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+/* 5. Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -148,7 +185,7 @@ body {
 
 .btn-primary {
     background: var(--primary-color);
-    color: white;
+    color: var(--white-text);
 }
 
 .btn-primary:hover {
@@ -157,7 +194,7 @@ body {
 
 .btn-secondary {
     background: var(--secondary-color);
-    color: white;
+    color: var(--white-text);
 }
 
 .btn-secondary:hover {
@@ -166,12 +203,17 @@ body {
 
 .btn-success {
     background: var(--success-color);
-    color: white;
+    color: var(--white-text);
 }
 
 .btn-danger {
     background: var(--danger-color);
-    color: white;
+    color: var(--white-text);
+}
+
+.btn-info { /* Added for toggle inactive button */
+    background-color: #17a2b8;
+    color: var(--white-text);
 }
 
 .btn-sm {
@@ -179,108 +221,248 @@ body {
     font-size: 0.8rem;
 }
 
-/* Cards Grid */
-.cards-grid {
+/* 6. Cards Grid & General Card Styles */
+.item-list, /* For the main device list */
+.statistics-grid { /* For summary grids */
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: var(--spacing-lg);
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Default for .item-list and general grids */
+    gap: 20px;
+    margin-top: 20px; /* Only for .item-list, adjusted later for others if needed */
 }
 
+/* Default card style, for main device list */
 .card {
-    background: var(--surface-color);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-lg);
-    box-shadow: var(--shadow);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-5px);
+}
+
+.card.hidden-inactive {
+    display: none;
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: var(--spacing-md);
+    align-items: center;
+    padding: 15px;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--primary-color);
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 10px;
+}
+
+.card-title i {
+    color: var(--primary-color);
 }
 
 .card-actions {
     display: flex;
-    gap: var(--spacing-xs);
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.status-active {
+    background-color: #28a74533; /* Green with transparency */
+    color: #28a745; /* Darker green text */
+}
+
+.status-inactive {
+    background-color: #6c757d33; /* Grey with transparency */
+    color: #6c757d; /* Darker grey text */
+}
+
+.status-badge i {
+    font-size: 0.7em;
 }
 
 .card-body {
-    margin-bottom: var(--spacing-md);
+    padding: 15px;
+    color: var(--text-secondary);
 }
 
 .card-info {
-    display: grid;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed var(--border-color);
 }
 
 .info-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-xs) 0;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 5px;
 }
 
 .info-label {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9em; /* Consistent size */
 }
 
 .info-value {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.status-active {
-    background: #dcfce7;
-    color: var(--success-color);
-}
-
-.status-inactive {
-    background: #fee2e2;
-    color: var(--danger-color);
+    color: var(--text-secondary);
 }
 
 .operations-summary {
-    margin-top: var(--spacing-md);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
+    margin-top: 15px;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 15px;
 }
 
-.operations-count {
-    font-size: 0.9rem;
+.operations-summary .operations-count {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.operations-summary .btn.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8em;
+}
+
+/* 7. Specific Card Types */
+
+/* Statistics grid layout for overall summary and yearly stats */
+.all-time-device-summary-section .statistics-grid,
+.statistics-overview-section .statistics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Adjusted for these sections */
+    gap: 15px; /* Tighter gap */
+    margin-top: 0; /* No extra margin here */
+}
+
+/* General statistic card style (reused for all-time summaries) */
+.statistic-card {
+    background-color: var(--card-bg-light);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--box-shadow-small);
+    transition: transform 0.2s ease-in-out;
+}
+
+.statistic-card:hover {
+    transform: translateY(-3px);
+}
+
+.statistic-card .card-body {
+    display: flex;
+    flex-direction: column; /* Stack vertically for all-time summary */
+    width: 100%;
+}
+
+.statistic-card .card-title { /* For device names in all-time summary cards */
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    display: block; /* Override flex for simple text */
+}
+
+.statistic-item { /* For individual stats inside all-time summary cards */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    width: 100%;
+}
+
+.statistic-icon-small {
+    font-size: 1.2em;
     color: var(--text-secondary);
-    margin-bottom: var(--spacing-sm);
 }
 
-/* Modal */
+.statistic-label {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.statistic-value {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-left: auto; /* Push value to the right */
+}
+
+/* Specific styling for the yearly device statistics cards (purple gradient) */
+.device-statistic-overview-card {
+    background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
+    color: var(--white-text);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: var(--box-shadow-small);
+    transition: transform 0.2s ease-in-out;
+}
+
+.device-statistic-overview-card:hover {
+    transform: translateY(-3px);
+}
+
+.device-statistic-overview-card .card-header {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 0; /* Remove padding from this header to prevent double padding */
+    border-bottom: none; /* No border here */
+    background-color: transparent; /* No background color */
+}
+
+.device-statistic-overview-card .card-title {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: inherit; /* Inherit color from parent */
+    gap: 0; /* No gap for this title */
+}
+
+.device-statistic-overview-card .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.device-statistic-overview-card .statistic-value { /* Larger for main value like '12.67h' */
+    font-size: 2.5em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: inherit;
+}
+
+.device-statistic-overview-card .statistic-sub-value { /* Smaller for 'minutes' and 'operations' */
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+
+/* 8. Modals */
 .modal {
     display: none;
     position: fixed;
@@ -357,7 +539,7 @@ body {
     margin-top: var(--spacing-lg);
 }
 
-/* Form Elements */
+/* 9. Form Elements */
 .form-group {
     margin-bottom: var(--spacing-md);
 }
@@ -371,18 +553,22 @@ body {
 
 .form-group input,
 .form-group textarea,
-.form-group select {
+.form-group select,
+.filter-controls .form-control { /* Combined with filter control */
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     font-size: 1rem;
     transition: border-color 0.2s ease;
+    background-color: var(--input-bg); /* Added for consistency */
+    color: var(--text-primary); /* Added for consistency */
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
-.form-group select:focus {
+.form-group select:focus,
+.filter-controls .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -400,7 +586,20 @@ body {
     margin: 0;
 }
 
-/* Loading Spinner */
+/* Filter controls common styles */
+.filter-controls {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-controls label {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* 10. Loading Spinner */
 .loading-spinner {
     display: none;
     position: fixed;
@@ -432,7 +631,7 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* Toast Notifications */
+/* 11. Toast Notifications */
 .toast-container {
     position: fixed;
     top: var(--spacing-lg);
@@ -466,78 +665,116 @@ body {
     to { transform: translateX(0); }
 }
 
-/* Empty State */
+/* 12. Empty State */
 .empty-state {
     text-align: center;
-    padding: var(--spacing-xl);
+    padding: 40px 20px; /* Kept previous padding for visual consistency */
     color: var(--text-secondary);
+    background-color: var(--card-bg-light); /* Consistent with other light backgrounds */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-small);
+    margin-top: 20px;
 }
 
-.empty-state i {
-    font-size: 4rem;
-    margin-bottom: var(--spacing-md);
-    color: var(--border-color);
+.empty-state .fas {
+    font-size: 3em; /* Adjusted to match prior appearance from image_a2463a.png and general design */
+    color: var(--primary-color);
+    margin-bottom: 15px;
 }
 
 .empty-state h3 {
-    margin-bottom: var(--spacing-sm);
     color: var(--text-primary);
+    margin-bottom: 10px;
 }
 
-/* Mobile Responsiveness */
+.empty-state p {
+    font-size: 1em;
+    line-height: 1.5;
+}
+
+/* 13. Charts Specific Styles */
+.charts-section .chart-container {
+    background-color: var(--card-bg-light); /* Lighter background for the chart area */
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-top: 15px; /* Space between filter and chart */
+    box-shadow: var(--box-shadow-small);
+    position: relative;
+    height: 400px; /* Fixed height for the chart */
+    display: flex;
+    flex-direction: column;
+}
+
+.charts-section .chart-container h4 {
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.charts-section .chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    flex-grow: 1; /* Allow canvas to fill available space */
+}
+
+/* 14. Mobile Responsiveness */
 @media (max-width: 768px) {
     .container {
         padding: 0 var(--spacing-sm);
     }
-    
+
     .header .container {
         padding: var(--spacing-sm);
     }
-    
+
     .nav-brand span {
         display: none;
     }
-    
+
     .nav-tab span {
         display: none;
     }
-    
+
     .nav-tab {
         padding: var(--spacing-sm);
     }
-    
+
     .section-header {
         flex-direction: column;
         gap: var(--spacing-md);
     }
-    
+
     .section-header h1 {
         font-size: 1.5rem;
     }
-    
-    .cards-grid {
+
+    .item-list, /* Adjusted for mobile */
+    .cards-grid,
+    .all-time-device-summary-section .statistics-grid,
+    .statistics-overview-section .statistics-grid {
         grid-template-columns: 1fr;
         gap: var(--spacing-md);
     }
-    
+
     .card {
         padding: var(--spacing-md);
     }
-    
+
     .modal-content {
         width: 95%;
         margin: var(--spacing-sm);
     }
-    
+
     .modal-actions {
         flex-direction: column;
     }
-    
+
     .toast-container {
         right: var(--spacing-sm);
         left: var(--spacing-sm);
     }
-    
+
     .toast {
         min-width: auto;
     }
@@ -547,17 +784,17 @@ body {
     .main {
         padding: var(--spacing-lg) 0;
     }
-    
+
     .card-header {
         flex-direction: column;
         gap: var(--spacing-sm);
     }
-    
+
     .card-actions {
         width: 100%;
         justify-content: flex-end;
     }
-    
+
     .info-item {
         flex-direction: column;
         align-items: flex-start;
