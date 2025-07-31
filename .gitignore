@@ -1,4 +1,4 @@
 .venv
 devices.db
-gas.db
+bottles.db
 __pycache__

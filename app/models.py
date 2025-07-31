@@ -46,7 +46,7 @@ class BottlesDB(Base, BaseModelMixin):
     operations: Mapped[list["BottleOperationsDB"]] = relationship(
         back_populates="bottle",
         cascade="all, delete-orphan",
-        order_by="GasOperationsDB.date.desc()",
+        order_by="BottleOperationsDB.date.desc()",
     )
 
 
