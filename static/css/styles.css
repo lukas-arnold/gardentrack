@@ -1,40 +1,89 @@
 /* CSS Styles for GardenTrack */
 
-/* 1. Global Variables */
+/* 1. Global Variables - Refined for a Modern Look */
 :root {
-    --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
-    --secondary-color: #64748b;
-    --success-color: #059669;
-    --warning-color: #d97706;
-    --danger-color: #dc2626;
-    --background-color: #f8fafc;
-    --surface-color: #ffffff;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --border-color: #e2e8f0;
-    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --border-radius: 8px;
-    --border-radius-lg: 12px;
-    --border-radius-small: 4px; /* Added for consistency with form controls */
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
+    /* Brand Colors */
+    --primary-color: #4a7dff; /* Softer, modern blue */
+    --primary-hover: #3a68e0; /* Darker hover for primary */
+    --secondary-color: #6c757d; /* Standard muted gray */
+    --accent-purple: #8e44ad; /* A subtle accent color for specific elements like gradients */
 
-    /* Custom variables for specific components */
+    /* Status Colors */
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+
+    /* Neutrals - Adjusted for softer light mode */
+    --background-color: #f0f2f5; /* Light grey for subtle depth */
+    --surface-color: #ffffff;   /* Pure white for cards/main containers */
+    --text-primary: #343a40;    /* Dark grey for primary text */
+    --text-secondary: #6c757d;  /* Muted grey for secondary text */
+    --border-color: #e9ecef;    /* Light grey for borders */
+    --shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Softer, slightly larger shadow */
+    --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.15); /* Larger shadow for modals/popups */
+    --box-shadow-small: 0 2px 5px rgba(0,0,0,0.05); /* Lighter shadow for nested cards */
+
+    /* Spacing & Radii */
+    --border-radius: 10px; /* Slightly larger radius for a softer look */
+    --border-radius-lg: 14px;
+    --border-radius-small: 6px; /* For form controls */
+    --spacing-xs: 6px; /* Increased slightly for more breathing room */
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --spacing-xl: 40px;
+
+    /* Component specific variables */
     --card-bg: var(--surface-color);
-    --card-bg-light: #f1f5f9; /* Slightly lighter than surface for inner cards/elements */
-    --header-bg: var(--surface-color); /* For card headers, can be adjusted */
+    --card-bg-light: #f8f9fa; /* Lighter than surface for subtle contrast */
+    --header-bg: var(--surface-color);
     --input-bg: var(--surface-color);
-    --box-shadow: var(--shadow);
-    --box-shadow-small: 0 1px 2px 0 rgba(0,0,0,0.05); /* Lighter shadow for nested cards */
-    --primary-light: #6f42c1; /* For the gradient start color of yearly stats cards */
-    --card-gradient-start: #6f42c1; /* Matches previous purple */
-    --card-gradient-end: #8a2be2;   /* Matches previous purple */
+
+    /* Gradient for Yearly Stats Cards (Light Mode) */
+    --card-gradient-start: #6a11cb; /* Deeper purple */
+    --card-gradient-end: #2575fc;   /* Vibrant blue */
+
+    /* Text Colors for specific contexts */
     --white-text: #ffffff;
+    --black-text: #000000;
+}
+
+/* Dark Mode Variables - Optimized for OLED (Pure Black) */
+body.dark-mode {
+    /* Brand Colors */
+    --primary-color: #79a6ff; /* Lighter, but still distinct blue */
+    --primary-hover: #a0c2ff;
+    --secondary-color: #aebecd; /* Lighter secondary for contrast */
+    --accent-purple: #c288e0; /* Lighter purple accent */
+
+    /* Status Colors */
+    --success-color: #6ee7b7;
+    --warning-color: #fcd34d;
+    --danger-color: #f87171;
+
+    /* Neutrals - Pure black background, dark grays for surfaces */
+    --background-color: #000000; /* Pure black for OLED energy saving */
+    --surface-color: #1a1a1a;   /* Deep dark gray for cards/main containers */
+    --text-primary: #e0e0e0;    /* Light gray for primary text */
+    --text-secondary: #a0a0a0;  /* Slightly darker light gray for secondary text */
+    --border-color: #333333;    /* Dark gray for borders */
+    --shadow: 0 4px 10px rgba(0, 0, 0, 0.6); /* Darker, more pronounced shadows for depth */
+    --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.8);
+    --box-shadow-small: 0 2px 5px rgba(0,0,0,0.3);
+
+    /* Component specific variables */
+    --card-bg: var(--surface-color);
+    --card-bg-light: #2c2c2c; /* Even darker for inner elements/subtle contrast */
+    --header-bg: #121212; /* Very dark gray for header */
+    --input-bg: #333333; /* Dark input background */
+
+    /* Gradient for Yearly Stats Cards (Dark Mode) - Adjusted for dark aesthetic */
+    --card-gradient-start: #5a0fc1; /* Slightly more muted dark purple */
+    --card-gradient-end: #1a56e0;   /* Muted dark blue */
+
+    /* Text Colors for specific contexts */
+    --white-text: #ffffff;
+    --black-text: #000000; /* Still black for specific elements that use it */
 }
 
 /* 2. Reset and Base Styles */
@@ -44,11 +93,17 @@
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth; /* Smooth scrolling for anchor links if implemented */
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* Modern font stack */
     background-color: var(--background-color);
     color: var(--text-primary);
-    line-height: 1.5;
+    line-height: 1.6; /* Slightly increased line height for readability */
+    font-size: 16px; /* Base font size */
+    transition: background-color 0.4s ease, color 0.4s ease; /* Smoother transition */
 }
 
 .container {
@@ -59,62 +114,68 @@ body {
 
 /* 3. Header and Navigation */
 .header {
-    background: var(--surface-color);
+    background: var(--header-bg);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: var(--shadow);
+    box-shadow: var(--box-shadow-small); /* Lighter shadow for header */
+    transition: background 0.4s ease, border-bottom 0.4s ease, box-shadow 0.4s ease;
 }
 
 .header .container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md); /* Slightly reduced header padding */
+    height: 60px; /* Fixed height for header */
 }
 
 .nav-brand {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    font-size: 1.25rem;
+    font-size: 1.4rem; /* Larger brand font size */
     font-weight: 700;
     color: var(--primary-color);
+    text-decoration: none; /* Ensure no underline on brand */
+    transition: color 0.3s ease;
 }
 
 .nav-brand i {
-    font-size: 1.5rem;
+    font-size: 1.8rem; /* Larger icon */
 }
 
 .nav-tabs {
     display: flex;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-sm); /* Slightly larger gap between tabs */
 }
 
 .nav-tab {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-sm); /* Adjusted padding for tabs */
     background: transparent;
     border: none;
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-small); /* Smaller radius for tabs */
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
-    text-decoration: none; /* Ensure it looks like a button */
+    transition: all 0.25s ease; /* Smoother transition for tabs */
+    font-size: 0.95rem; /* Slightly larger tab font */
+    font-weight: 500;
+    text-decoration: none;
 }
 
 .nav-tab:hover {
-    background: var(--background-color);
+    background: var(--card-bg-light);
     color: var(--text-primary);
 }
 
 .nav-tab.active {
     background: var(--primary-color);
     color: var(--white-text);
+    box-shadow: var(--box-shadow-small); /* Subtle shadow for active tab */
 }
 
 .nav-tab-home {
@@ -129,6 +190,7 @@ body {
 
 .section {
     display: none;
+    padding-bottom: var(--spacing-xl); /* Add bottom padding to sections */
 }
 
 .section.active {
@@ -139,48 +201,61 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg); /* Slightly larger margin */
+    padding-bottom: var(--spacing-sm); /* Add padding to bottom of header */
+    border-bottom: 1px solid var(--border-color); /* Separator for section header */
 }
 
 .section-header h1 {
-    font-size: 2rem;
+    font-size: 2.2rem; /* Larger section title */
     font-weight: 700;
     color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 /* Common styling for all major sections (charts, all-time summary, yearly stats) */
 .charts-section,
 .all-time-device-summary-section,
-.statistics-overview-section {
+.statistics-overview-section,
+.device-management-section, /* Added if this is a main section */
+.bottle-management-section { /* Added if this is a main section */
     background-color: var(--card-bg);
     border-radius: var(--border-radius);
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: var(--box-shadow);
+    padding: var(--spacing-lg); /* Increased padding inside sections */
+    margin-bottom: var(--spacing-xl); /* Consistent margin between sections */
+    box-shadow: var(--shadow);
+    transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .charts-section h3,
 .all-time-device-summary-section h3,
-.statistics-overview-section h3 {
+.statistics-overview-section h3,
+.device-management-section h3,
+.bottle-management-section h3 {
     color: var(--text-primary);
-    margin-bottom: 15px;
+    font-size: 1.5rem; /* Consistent H3 size */
+    margin-bottom: var(--spacing-md); /* Consistent H3 margin */
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
+    padding-bottom: var(--spacing-xs);
+    transition: color 0.3s ease, border-bottom 0.3s ease;
 }
+
 
 /* 5. Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center; /* Center content in button */
     gap: var(--spacing-xs);
     padding: var(--spacing-sm) var(--spacing-md);
     border: none;
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
+    border-radius: var(--border-radius-small); /* Softer corners for buttons */
+    font-size: 1rem; /* Slightly larger button text */
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease; /* Smoother transition */
     text-decoration: none;
+    white-space: nowrap; /* Prevent text wrap */
 }
 
 .btn-primary {
@@ -190,6 +265,8 @@ body {
 
 .btn-primary:hover {
     background: var(--primary-hover);
+    transform: translateY(-2px); /* Subtle lift on hover */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Shadow on hover */
 }
 
 .btn-secondary {
@@ -198,49 +275,70 @@ body {
 }
 
 .btn-secondary:hover {
-    background: #475569;
+    background: #5a6268; /* Darker grey hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .btn-success {
     background: var(--success-color);
     color: var(--white-text);
 }
+.btn-success:hover {
+    background: #218838; /* Darker green hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
 
 .btn-danger {
     background: var(--danger-color);
     color: var(--white-text);
+}
+.btn-danger:hover {
+    background: #c82333; /* Darker red hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .btn-info { /* Added for toggle inactive button */
     background-color: #17a2b8;
     color: var(--white-text);
 }
+.btn-info:hover {
+    background: #138496;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
 
 .btn-sm {
     padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 0.8rem;
+    font-size: 0.85rem; /* Slightly larger small button font */
 }
 
 /* 6. Cards Grid & General Card Styles */
 .item-list, /* For the main device list */
 .statistics-grid { /* For summary grids */
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Default for .item-list and general grids */
-    gap: 20px;
-    margin-top: 20px; /* Only for .item-list, adjusted later for others if needed */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Slightly adjusted min width */
+    gap: var(--spacing-md); /* Consistent gap for grids */
+    margin-top: 0; /* Remove initial margin for consistency */
 }
 
 /* Default card style, for main device list */
 .card {
     background-color: var(--card-bg);
     border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    box-shadow: var(--shadow);
     overflow: hidden;
-    transition: transform 0.2s ease-in-out;
+    display: flex; /* Flexbox for card content */
+    flex-direction: column;
+    transition: transform 0.25s ease-in-out, background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .card:hover {
     transform: translateY(-5px);
+    box-shadow: var(--shadow-lg); /* More pronounced shadow on hover */
 }
 
 .card.hidden-inactive {
@@ -251,97 +349,131 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
+    padding: var(--spacing-md); /* Consistent padding */
     background-color: var(--header-bg);
     border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.4s ease, border-bottom 0.4s ease;
 }
 
 .card-title {
     margin: 0;
-    font-size: 1.2em;
+    font-size: 1.3em; /* Slightly larger title */
+    font-weight: 600;
     color: var(--primary-color);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--spacing-sm);
+    transition: color 0.3s ease;
 }
 
 .card-title i {
+    font-size: 1.5em; /* Larger icon */
     color: var(--primary-color);
 }
 
 .card-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--spacing-xs);
 }
 
+/* Target the "x" button more specifically if it has a class like 'delete-btn' */
+.card-actions .btn-danger.btn-sm { /* Assuming the delete button is danger and small */
+    padding: var(--spacing-xs) var(--spacing-sm); /* Ensure good touch target */
+    font-size: 0.9rem; /* Slightly larger icon/text for better tap */
+    min-width: 32px; /* Ensure minimum tappable area */
+    min-height: 32px;
+}
+.card-actions .btn-danger.btn-sm i { /* Ensure the icon itself is large enough */
+    font-size: 1.2rem;
+}
+
+
 .status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
+    padding: 6px 10px; /* Larger badge padding */
+    border-radius: var(--border-radius-lg); /* Pill shape for badge */
+    font-size: 0.85em; /* Slightly larger badge font */
     font-weight: bold;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    white-space: nowrap;
 }
 
 .status-active {
-    background-color: #28a74533; /* Green with transparency */
-    color: #28a745; /* Darker green text */
+    background-color: rgba(40, 167, 69, 0.15); /* Slightly less opaque green for lighter feel */
+    color: #28a745;
+}
+body.dark-mode .status-active {
+    background-color: rgba(110, 231, 183, 0.15); /* Adjusted for dark mode success color */
+    color: var(--success-color);
 }
 
+
 .status-inactive {
-    background-color: #6c757d33; /* Grey with transparency */
-    color: #6c757d; /* Darker grey text */
+    background-color: rgba(108, 117, 125, 0.15); /* Slightly less opaque grey */
+    color: #6c757d;
+}
+body.dark-mode .status-inactive {
+    background-color: rgba(174, 190, 205, 0.15); /* Adjusted for dark mode secondary color */
+    color: var(--secondary-color);
 }
 
 .status-badge i {
-    font-size: 0.7em;
+    font-size: 0.8em;
 }
 
 .card-body {
-    padding: 15px;
+    padding: var(--spacing-md);
     color: var(--text-secondary);
+    flex-grow: 1; /* Make card body fill available space */
+    transition: color 0.3s ease;
 }
 
 .card-info {
-    margin-bottom: 15px;
-    padding-bottom: 15px;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
     border-bottom: 1px dashed var(--border-color);
+    transition: border-bottom 0.3s ease;
 }
 
 .info-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: var(--spacing-xs); /* Tighter spacing for info items */
 }
 
 .info-label {
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 0.9em; /* Consistent size */
+    font-size: 0.95em; /* Slightly larger info labels */
+    transition: color 0.3s ease;
 }
 
 .info-value {
     color: var(--text-secondary);
+    font-weight: 500; /* Make value slightly bolder */
+    transition: color 0.3s ease;
 }
 
 .operations-summary {
-    margin-top: 15px;
+    margin-top: var(--spacing-md);
     border-top: 1px dashed var(--border-color);
-    padding-top: 15px;
+    padding-top: var(--spacing-md);
+    transition: border-top 0.3s ease;
 }
 
 .operations-summary .operations-count {
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: var(--spacing-sm);
     color: var(--text-primary);
+    font-size: 1.1em; /* Larger count font */
+    transition: color 0.3s ease;
 }
 
 .operations-summary .btn.btn-sm {
-    padding: 4px 8px;
-    font-size: 0.8em;
+    margin-right: var(--spacing-xs); /* Space between small buttons */
 }
 
 /* 7. Specific Card Types */
@@ -349,64 +481,72 @@ body {
 /* Statistics grid layout for overall summary and yearly stats */
 .all-time-device-summary-section .statistics-grid,
 .statistics-overview-section .statistics-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Adjusted for these sections */
-    gap: 15px; /* Tighter gap */
-    margin-top: 0; /* No extra margin here */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjusted min width for more items per row */
+    gap: var(--spacing-md); /* Consistent gap */
 }
 
 /* General statistic card style (reused for all-time summaries) */
 .statistic-card {
     background-color: var(--card-bg-light);
     border-radius: var(--border-radius);
-    padding: 15px;
+    padding: var(--spacing-md); /* Consistent padding */
     display: flex;
     align-items: center;
+    gap: var(--spacing-md); /* Gap between icon and text */
     box-shadow: var(--box-shadow-small);
-    transition: transform 0.2s ease-in-out;
+    transition: transform 0.25s ease-in-out, background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .statistic-card:hover {
     transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Slightly more pronounced shadow on hover */
+}
+body.dark-mode .statistic-card:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
 
 .statistic-card .card-body {
     display: flex;
-    flex-direction: column; /* Stack vertically for all-time summary */
-    width: 100%;
+    flex-direction: column;
+    width: auto; /* Allow content to dictate width */
+    padding: 0; /* Remove padding from card-body here as it's already on statistic-card */
 }
 
 .statistic-card .card-title { /* For device names in all-time summary cards */
-    font-size: 1.2em;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-bottom: 10px;
-    display: block; /* Override flex for simple text */
+    font-size: 1.1em; /* Slightly smaller title within these cards */
+    font-weight: 600;
+    color: var(--text-primary); /* Primary text color for these titles */
+    margin-bottom: var(--spacing-xs);
+    transition: color 0.3s ease;
 }
 
 .statistic-item { /* For individual stats inside all-time summary cards */
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 5px;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
     width: 100%;
 }
 
 .statistic-icon-small {
-    font-size: 1.2em;
-    color: var(--text-secondary);
+    font-size: 1.3em; /* Slightly larger icon */
+    color: var(--primary-color); /* Use primary color for icons */
+    transition: color 0.3s ease;
 }
 
 .statistic-label {
     font-size: 0.9em;
     color: var(--text-secondary);
     white-space: nowrap;
+    transition: color 0.3s ease;
 }
 
 .statistic-value {
-    font-size: 1.1em;
-    font-weight: 600;
+    font-size: 1.2em; /* Slightly larger value */
+    font-weight: 700; /* Bolder value */
     color: var(--text-primary);
-    margin-left: auto; /* Push value to the right */
+    margin-left: auto;
+    transition: color 0.3s ease;
 }
 
 /* Specific styling for the yearly device statistics cards (purple gradient) */
@@ -414,51 +554,53 @@ body {
     background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
     color: var(--white-text);
     border-radius: var(--border-radius);
-    padding: 15px;
+    padding: var(--spacing-md);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    box-shadow: var(--box-shadow-small);
-    transition: transform 0.2s ease-in-out;
+    box-shadow: var(--shadow); /* Use main shadow for these prominent cards */
+    transition: transform 0.25s ease-in-out, background 0.4s ease, box-shadow 0.4s ease;
 }
 
 .device-statistic-overview-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg); /* More pronounced shadow on hover */
 }
 
 .device-statistic-overview-card .card-header {
     width: 100%;
-    margin-bottom: 10px;
-    padding: 0; /* Remove padding from this header to prevent double padding */
-    border-bottom: none; /* No border here */
-    background-color: transparent; /* No background color */
+    margin-bottom: var(--spacing-sm);
+    padding: 0;
+    border-bottom: none;
+    background-color: transparent;
 }
 
 .device-statistic-overview-card .card-title {
-    font-size: 1.4em;
+    font-size: 1.5em; /* Larger title for these cards */
     font-weight: bold;
-    margin-bottom: 5px;
-    color: inherit; /* Inherit color from parent */
-    gap: 0; /* No gap for this title */
+    margin-bottom: var(--spacing-xs);
+    color: inherit;
+    gap: 0;
 }
 
 .device-statistic-overview-card .card-body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 0; /* Remove padding */
 }
 
 .device-statistic-overview-card .statistic-value { /* Larger for main value like '12.67h' */
-    font-size: 2.5em;
+    font-size: 2.8em; /* Even larger value */
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: var(--spacing-xs);
     color: inherit;
 }
 
 .device-statistic-overview-card .statistic-sub-value { /* Smaller for 'minutes' and 'operations' */
-    font-size: 0.9em;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 1em; /* Slightly larger sub-value */
+    color: rgba(255, 255, 255, 0.85); /* Slightly less transparent */
 }
 
 
@@ -470,9 +612,10 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.75); /* Darker, more opaque overlay */
     z-index: 1000;
-    animation: fadeIn 0.2s ease;
+    animation: fadeIn 0.3s ease forwards; /* Slightly longer fade in */
+    transition: background 0.4s ease;
 }
 
 .modal.active {
@@ -490,14 +633,16 @@ body {
     background: var(--surface-color);
     border-radius: var(--border-radius-lg);
     width: 90%;
-    max-width: 500px;
+    max-width: 550px; /* Slightly wider modal */
     max-height: 90vh;
     overflow-y: auto;
-    animation: slideUp 0.3s ease;
+    animation: slideUp 0.3s ease forwards;
+    box-shadow: var(--shadow-lg); /* Prominent shadow for modals */
+    transition: background 0.4s ease, box-shadow 0.4s ease;
 }
 
 @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
+    from { transform: translateY(30px); opacity: 0; } /* Larger initial translateY */
     to { transform: translateY(0); opacity: 1; }
 }
 
@@ -505,31 +650,36 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     border-bottom: 1px solid var(--border-color);
+    transition: border-bottom 0.3s ease;
 }
 
 .modal-header h2 {
-    font-size: 1.5rem;
+    font-size: 1.6rem; /* Slightly larger modal title */
     font-weight: 600;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .modal-close {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.8rem; /* Larger close icon */
     color: var(--text-secondary);
     cursor: pointer;
     padding: var(--spacing-xs);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-small);
+    transition: color 0.3s ease, background 0.3s ease;
 }
 
 .modal-close:hover {
-    background: var(--background-color);
+    background: var(--card-bg-light);
+    color: var(--primary-color); /* Primary color on hover for close icon */
 }
 
 .modal-content form {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
 }
 
 .modal-actions {
@@ -537,6 +687,7 @@ body {
     gap: var(--spacing-sm);
     justify-content: flex-end;
     margin-top: var(--spacing-lg);
+    padding: 0 var(--spacing-md) var(--spacing-md); /* Align with content padding */
 }
 
 /* 9. Form Elements */
@@ -549,20 +700,21 @@ body {
     margin-bottom: var(--spacing-xs);
     font-weight: 500;
     color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select,
-.filter-controls .form-control { /* Combined with filter control */
+.filter-controls .form-control {
     width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-sm); /* Consistent input padding */
     border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-small);
     font-size: 1rem;
-    transition: border-color 0.2s ease;
-    background-color: var(--input-bg); /* Added for consistency */
-    color: var(--text-primary); /* Added for consistency */
+    transition: border-color 0.2s ease, background-color 0.4s ease, color 0.4s ease, box-shadow 0.2s ease;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
 }
 
 .form-group input:focus,
@@ -571,32 +723,47 @@ body {
 .filter-controls .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 3px rgba(74, 125, 255, 0.2); /* Light mode primary rgba */
 }
+/* Helper for primary color RGB value for rgba() in box-shadow. Needs to be defined in JS or manually in CSS if using specific hex codes, otherwise use a direct rgba value. I'll use a direct rgba value for simplicity based on the dark mode primary color */
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group textarea:focus,
+body.dark-mode .form-group select:focus,
+body.dark-mode .filter-controls .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(121, 166, 255, 0.3); /* Dark mode primary rgba, slightly more opaque */
+}
+
 
 .checkbox-label {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     cursor: pointer;
+    font-size: 0.95rem; /* Consistent font size */
+    color: var(--text-primary);
+    transition: color 0.3s ease;
 }
 
 .checkbox-label input[type="checkbox"] {
     width: auto;
     margin: 0;
+    transform: scale(1.1); /* Slightly larger checkbox */
 }
 
 /* Filter controls common styles */
 .filter-controls {
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-md);
     display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
     align-items: center;
-    gap: 10px;
+    gap: var(--spacing-sm);
 }
 
 .filter-controls label {
     color: var(--text-secondary);
     font-weight: 600;
+    font-size: 0.9rem; /* Smaller label for filters */
+    transition: color 0.3s ease;
 }
 
 /* 10. Loading Spinner */
@@ -607,10 +774,11 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.8); /* Even darker, more opaque overlay */
     z-index: 9999;
     align-items: center;
     justify-content: center;
+    transition: background 0.4s ease;
 }
 
 .loading-spinner.active {
@@ -618,12 +786,13 @@ body {
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--border-color);
-    border-top: 4px solid var(--primary-color);
+    width: 50px; /* Larger spinner */
+    height: 50px;
+    border: 5px solid var(--border-color); /* Thicker border */
+    border-top: 5px solid var(--primary-color);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite; /* Faster spin */
+    transition: border-color 0.3s ease;
 }
 
 @keyframes spin {
@@ -634,8 +803,8 @@ body {
 /* 11. Toast Notifications */
 .toast-container {
     position: fixed;
-    top: var(--spacing-lg);
-    right: var(--spacing-lg);
+    top: var(--spacing-md); /* Consistent top spacing */
+    right: var(--spacing-md);
     z-index: 1100;
     display: flex;
     flex-direction: column;
@@ -647,9 +816,15 @@ body {
     padding: var(--spacing-md);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-lg);
-    border-left: 4px solid var(--primary-color);
-    min-width: 300px;
-    animation: slideInRight 0.3s ease;
+    border-left: 5px solid var(--primary-color); /* Thicker border */
+    min-width: 320px; /* Slightly wider toast */
+    max-width: 90vw; /* Max width for mobile */
+    animation: slideInRight 0.4s ease forwards; /* Smoother animation */
+    color: var(--text-primary);
+    display: flex; /* Flex for content alignment */
+    align-items: center;
+    gap: var(--spacing-sm);
+    transition: background 0.4s ease, box-shadow 0.4s ease, border-left-color 0.4s ease, color 0.4s ease;
 }
 
 .toast.success {
@@ -660,100 +835,155 @@ body {
     border-left-color: var(--danger-color);
 }
 
+.toast-message {
+    flex-grow: 1; /* Message takes up available space */
+}
+
 @keyframes slideInRight {
-    from { transform: translateX(100%); }
+    from { transform: translateX(110%); } /* Slide in from further right */
     to { transform: translateX(0); }
 }
 
 /* 12. Empty State */
 .empty-state {
     text-align: center;
-    padding: 40px 20px; /* Kept previous padding for visual consistency */
+    padding: var(--spacing-xl); /* More padding */
     color: var(--text-secondary);
-    background-color: var(--card-bg-light); /* Consistent with other light backgrounds */
+    background-color: var(--card-bg-light);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow-small);
-    margin-top: 20px;
+    margin-top: var(--spacing-md);
+    transition: background-color 0.4s ease, box-shadow 0.4s ease, color 0.4s ease;
 }
 
 .empty-state .fas {
-    font-size: 3em; /* Adjusted to match prior appearance from image_a2463a.png and general design */
+    font-size: 3.5em; /* Larger icon */
     color: var(--primary-color);
-    margin-bottom: 15px;
+    margin-bottom: var(--spacing-md);
+    transition: color 0.3s ease;
 }
 
 .empty-state h3 {
     color: var(--text-primary);
-    margin-bottom: 10px;
+    margin-bottom: var(--spacing-sm);
+    font-size: 1.5rem; /* Larger heading */
 }
 
 .empty-state p {
-    font-size: 1em;
-    line-height: 1.5;
+    font-size: 1.1em; /* Larger paragraph text */
+    line-height: 1.6;
 }
 
 /* 13. Charts Specific Styles */
 .charts-section .chart-container {
-    background-color: var(--card-bg-light); /* Lighter background for the chart area */
+    background-color: var(--card-bg-light);
     border-radius: var(--border-radius);
-    padding: 15px;
-    margin-top: 15px; /* Space between filter and chart */
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
     box-shadow: var(--box-shadow-small);
     position: relative;
-    height: 400px; /* Fixed height for the chart */
+    height: 400px; /* Consistent height */
     display: flex;
     flex-direction: column;
+    transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .charts-section .chart-container h4 {
     color: var(--text-primary);
-    margin-bottom: 15px;
+    margin-bottom: var(--spacing-md);
     text-align: center;
-    font-size: 1.2em;
+    font-size: 1.25em; /* Slightly larger chart title */
+    transition: color 0.3s ease;
 }
 
 .charts-section .chart-container canvas {
     width: 100% !important;
     height: 100% !important;
-    flex-grow: 1; /* Allow canvas to fill available space */
+    flex-grow: 1;
+}
+
+/* Dark Mode Toggle Switch */
+.dark-mode-toggle {
+    position: fixed;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+    background-color: var(--primary-color);
+    color: var(--white-text);
+    border: none;
+    border-radius: 50%;
+    width: 55px; /* Slightly larger toggle */
+    height: 55px;
+    font-size: 26px; /* Larger icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg); /* More prominent shadow */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    z-index: 1000;
+}
+
+.dark-mode-toggle:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-3px); /* Subtle lift on hover */
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25); /* More shadow on hover */
+}
+body.dark-mode .dark-mode-toggle:hover {
+    box-shadow: 0 6px 15px rgba(0,0,0,0.6);
 }
 
 /* 14. Mobile Responsiveness */
 @media (max-width: 768px) {
+    body {
+        font-size: 15px; /* Slightly smaller base font size for tablets/larger phones */
+    }
     .container {
         padding: 0 var(--spacing-sm);
     }
 
     .header .container {
-        padding: var(--spacing-sm);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        height: 55px;
     }
 
     .nav-brand span {
-        display: none;
+        display: none; /* Hide text, keep icon */
     }
 
     .nav-tab span {
-        display: none;
+        display: none; /* Hide text, keep icon */
     }
 
     .nav-tab {
-        padding: var(--spacing-sm);
+        padding: var(--spacing-xs); /* Smaller padding for tabs on mobile */
+        font-size: 0.8rem;
+    }
+    .nav-tab i {
+        font-size: 1.2rem; /* Ensure icons are visible */
     }
 
     .section-header {
         flex-direction: column;
-        gap: var(--spacing-md);
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+        text-align: center; /* Center align header content */
     }
 
     .section-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.8rem; /* Smaller section title on mobile */
     }
 
-    .item-list, /* Adjusted for mobile */
-    .cards-grid,
-    .all-time-device-summary-section .statistics-grid,
-    .statistics-overview-section .statistics-grid {
-        grid-template-columns: 1fr;
+    .btn {
+        width: 100%; /* Full width buttons on mobile, except for specific inline ones */
+    }
+    .operations-summary .btn.btn-sm {
+        width: auto; /* Override for small inline buttons */
+    }
+
+
+    .item-list,
+    .statistics-grid {
+        grid-template-columns: 1fr; /* Single column layout on mobile */
         gap: var(--spacing-md);
     }
 
@@ -763,41 +993,104 @@ body {
 
     .modal-content {
         width: 95%;
-        margin: var(--spacing-sm);
+        margin: var(--spacing-md) auto;
     }
 
     .modal-actions {
         flex-direction: column;
+        gap: var(--spacing-xs);
+        padding: 0 var(--spacing-md) var(--spacing-md);
+    }
+    .modal-actions .btn {
+        width: 100%;
     }
 
     .toast-container {
         right: var(--spacing-sm);
-        left: var(--spacing-sm);
+        left: var(--spacing-sm); /* Full width toast container */
+        top: var(--spacing-sm);
     }
 
     .toast {
-        min-width: auto;
+        min-width: unset; /* Remove min-width for full flexibility */
+        max-width: 100%;
+        font-size: 0.9em;
+    }
+
+    .charts-section .chart-container {
+        height: 300px; /* Reduce chart height slightly on mobile for less scrolling */
+        padding: var(--spacing-sm); /* Reduce padding */
     }
 }
 
 @media (max-width: 480px) {
+    body {
+        font-size: 14px; /* Even smaller base font size for smallest phones */
+    }
     .main {
-        padding: var(--spacing-lg) 0;
+        padding: var(--spacing-md) 0;
     }
 
     .card-header {
         flex-direction: column;
         gap: var(--spacing-sm);
+        align-items: flex-start; /* Align items to start when stacked */
+    }
+
+    .card-title {
+        font-size: 1.2em; /* Smaller card title */
     }
 
     .card-actions {
         width: 100%;
-        justify-content: flex-end;
+        justify-content: flex-end; /* Keep actions to the right */
     }
 
     .info-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: var(--spacing-xs);
+        gap: 2px; /* Very tight spacing for info items on small screens */
+    }
+    .info-label, .info-value {
+        font-size: 0.9em; /* Smaller info text */
+    }
+
+
+    .filter-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    .filter-controls .form-group {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .dark-mode-toggle {
+        width: 48px; /* Slightly smaller toggle button */
+        height: 48px;
+        font-size: 22px; /* Smaller icon */
+        bottom: var(--spacing-sm);
+        right: var(--spacing-sm);
+    }
+
+    .empty-state {
+        padding: var(--spacing-lg); /* Reduced padding for empty state */
+    }
+    .empty-state .fas {
+        font-size: 3em;
+    }
+    .empty-state h3 {
+        font-size: 1.3rem;
+    }
+    .empty-state p {
+        font-size: 1em;
+    }
+
+    .device-statistic-overview-card .statistic-value {
+        font-size: 2.2em; /* Smaller main stat for overview cards */
+    }
+    .device-statistic-overview-card .card-title {
+        font-size: 1.3em; /* Smaller title for overview cards */
     }
 }
