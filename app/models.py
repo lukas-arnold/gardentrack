@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, ForeignKey, Boolean
+from sqlalchemy import ForeignKey
 from datetime import date as date_
 
 
@@ -12,14 +12,14 @@ class BaseBottles(DeclarativeBase):
 
 
 class BaseModelMixin:
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
 
 class DevicesDB(BaseDevices, BaseModelMixin):
     __tablename__ = "devices"
 
     name: Mapped[str] = mapped_column(nullable=False)
-    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     operations: Mapped[list["DeviceOperationsDB"]] = relationship(
         back_populates="device",
@@ -46,7 +46,7 @@ class BottlesDB(BaseBottles, BaseModelMixin):
     purchase_price: Mapped[float] = mapped_column(nullable=False)
     initial_weight: Mapped[float] = mapped_column(nullable=False)
     filling_weight: Mapped[float] = mapped_column(nullable=False)
-    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     operations: Mapped[list["BottleOperationsDB"]] = relationship(
         back_populates="bottle",
