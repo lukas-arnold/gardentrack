@@ -1,4 +1,13 @@
+/**
+ * A utility object for handling UI-related tasks such as showing/hiding
+ * modals, displaying toasts, and managing loading states.
+ * @namespace UI
+ */
 export const UI = {
+    /**
+     * Toggles the visibility of the global loading spinner.
+     * @param {boolean} show - If true, shows the spinner; otherwise, hides it.
+     */
     showLoading(show) {
         const spinner = document.getElementById('loading-spinner');
         if (spinner) { // Check if spinner exists
@@ -10,6 +19,11 @@ export const UI = {
         }
     },
 
+    /**
+     * Displays a toast notification with a message and a type.
+     * @param {string} message - The message to display.
+     * @param {string} [type='info'] - The type of toast ('success', 'error', 'warning', 'info').
+     */
     showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
         if (!container) return; // Ensure container exists
@@ -24,11 +38,17 @@ export const UI = {
         
         container.appendChild(toast);
         
+        // Automatically remove the toast after 5 seconds.
         setTimeout(() => {
             toast.remove();
         }, 5000);
     },
 
+    /**
+     * Gets the Font Awesome icon name corresponding to a toast type.
+     * @param {string} type - The toast type ('success', 'error', 'warning', 'info').
+     * @returns {string} The icon class name.
+     */
     getToastIcon(type) {
         const icons = {
             success: 'check-circle',
@@ -39,6 +59,10 @@ export const UI = {
         return icons[type] || icons.info;
     },
 
+    /**
+     * Displays a modal by adding the 'active' class and preventing body scrolling.
+     * @param {string} modalId - The ID of the modal element to show.
+     */
     showModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) { // Check if modal exists
@@ -47,6 +71,10 @@ export const UI = {
         }
     },
 
+    /**
+     * Hides a modal by removing the 'active' class and restoring body scrolling.
+     * @param {string} modalId - The ID of the modal element to hide.
+     */
     hideModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) { // Check if modal exists
@@ -55,6 +83,10 @@ export const UI = {
         }
     },
 
+    /**
+     * Resets a form to its default state.
+     * @param {string} formId - The ID of the form element to clear.
+     */
     clearForm(formId) {
         const form = document.getElementById(formId);
         if (form) { // Check if form exists
@@ -65,6 +97,13 @@ export const UI = {
         }
     },
 
+    /**
+     * Creates the HTML string for an empty state message.
+     * @param {string} icon - The Font Awesome icon class name.
+     * @param {string} title - The title of the empty state message.
+     * @param {string} description - The descriptive text.
+     * @returns {string} The HTML string for the empty state.
+     */
     createEmptyState(icon, title, description) {
         return `
             <div class="empty-state">
@@ -75,6 +114,12 @@ export const UI = {
         `;
     },
 
+    /**
+     * Displays the operation modal, configuring it for either a device or a bottle operation.
+     * @param {string} title - The title for the modal.
+     * @param {string} type - The type of operation ('device' or 'bottle').
+     * @param {number} targetId - The ID of the device or bottle the operation is for.
+     */
     showOperationModal(title, type, targetId) {
         const operationModalTitle = document.getElementById('operation-modal-title');
         const operationForm = document.getElementById('operation-form');
@@ -88,7 +133,7 @@ export const UI = {
         // Set today's date as default
         document.getElementById('operation-date').value = new Date().toISOString().split('T')[0];
         
-        // Show/hide fields based on type
+        // Show/hide fields based on the operation type.
         const durationGroup = document.getElementById('duration-group');
         const weightGroup = document.getElementById('weight-group');
         const noteGroup = document.getElementById('note-group');
