@@ -50,17 +50,35 @@ export class ChartManager {
         const defaultOptions = {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    bottom: 20, // Add padding for X-axis labels
+                    top: 10,
+                    left: 10,
+                    right: 10
+                }
+            },
             plugins: {
                 legend: {
                     display: true,
                     position: 'top',
                     labels: {
-                        color: 'var(--text-secondary)'
+                        color: 'var(--text-secondary)',
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
                     }
                 },
                 tooltip: {
                     mode: 'index',
-                    intersect: false
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'var(--primary-color)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true
                 }
             },
             scales: {
@@ -68,10 +86,15 @@ export class ChartManager {
                     title: {
                         display: true,
                         text: 'Zeit',
-                        color: 'var(--text-secondary)'
+                        color: 'var(--text-secondary)',
+                        font: {
+                            size: 12
+                        }
                     },
                     ticks: {
-                        color: 'var(--text-secondary)'
+                        color: 'var(--text-secondary)',
+                        maxRotation: 45,
+                        minRotation: 0
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
@@ -81,15 +104,33 @@ export class ChartManager {
                     title: {
                         display: true,
                         text: 'Wert',
-                        color: 'var(--text-secondary)'
+                        color: 'var(--text-secondary)',
+                        font: {
+                            size: 12
+                        }
                     },
                     beginAtZero: true,
                     ticks: {
-                        color: 'var(--text-secondary)'
+                        color: 'var(--text-secondary)',
+                        maxTicksLimit: 8
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
                     }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
+            elements: {
+                point: {
+                    radius: 4,
+                    hoverRadius: 6
+                },
+                line: {
+                    tension: 0.2
                 }
             }
         };
@@ -178,16 +219,17 @@ export class ChartManager {
      * @returns {Array} Array of color strings.
      */
     generateColors(count, alpha = 0.8) {
+        // Modern, consistent color palette
         const colors = [
+            'rgba(74, 125, 255, ' + alpha + ')',   // Primary Blue
+            'rgba(142, 68, 173, ' + alpha + ')',   // Purple
             'rgba(46, 204, 113, ' + alpha + ')',   // Green
-            'rgba(52, 152, 219, ' + alpha + ')',   // Blue
-            'rgba(155, 89, 182, ' + alpha + ')',   // Purple
-            'rgba(243, 156, 18, ' + alpha + ')',   // Orange
-            'rgba(231, 76, 60, ' + alpha + ')',    // Red
-            'rgba(26, 188, 156, ' + alpha + ')',   // Turquoise
-            'rgba(52, 73, 94, ' + alpha + ')',     // Dark Blue
-            'rgba(149, 165, 166, ' + alpha + ')',  // Gray
             'rgba(241, 196, 15, ' + alpha + ')',   // Yellow
+            'rgba(231, 76, 60, ' + alpha + ')',    // Red
+            'rgba(26, 188, 156, ' + alpha + ')',   // Teal
+            'rgba(243, 156, 18, ' + alpha + ')',   // Orange
+            'rgba(155, 89, 182, ' + alpha + ')',   // Light Purple
+            'rgba(52, 152, 219, ' + alpha + ')',   // Light Blue
             'rgba(230, 126, 34, ' + alpha + ')'    // Dark Orange
         ];
 
@@ -205,10 +247,23 @@ export class ChartManager {
     createConsumptionChart(bottles) {
         const labels = bottles.map(bottle => `Flasche #${bottle.id}`);
         const data = bottles.map(bottle => bottle.percentage);
-        const backgroundColors = bottles.map(bottle => {
-            if (bottle.percentage >= 50) return "rgba(46, 204, 113, 0.8)";
-            if (bottle.percentage >= 20) return "rgba(243, 156, 18, 0.8)";
-            return "rgba(231, 76, 60, 0.8)";
+        
+        // Use static colors for better consistency
+        const backgroundColors = bottles.map((bottle, index) => {
+            // Use a consistent color palette instead of dynamic colors
+            const staticColors = [
+                'rgba(74, 125, 255, 0.8)',   // Primary Blue
+                'rgba(142, 68, 173, 0.8)',   // Purple
+                'rgba(46, 204, 113, 0.8)',   // Green
+                'rgba(241, 196, 15, 0.8)',   // Yellow
+                'rgba(26, 188, 156, 0.8)',   // Teal
+                'rgba(243, 156, 18, 0.8)',   // Orange
+                'rgba(155, 89, 182, 0.8)',   // Light Purple
+                'rgba(52, 152, 219, 0.8)',   // Light Blue
+                'rgba(230, 126, 34, 0.8)',   // Dark Orange
+                'rgba(231, 76, 60, 0.8)'     // Red
+            ];
+            return staticColors[index % staticColors.length];
         });
 
         const options = {
@@ -238,17 +293,18 @@ export class ChartManager {
             'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
         ];
 
+        // Modern, consistent color palette for line charts
         const colors = [
-            'rgba(128, 0, 128, 1)', // Purple
-            'rgba(0, 128, 0, 1)',  // Green
-            'rgba(255, 165, 0, 1)',// Orange
-            'rgba(0, 128, 128, 1)',// Teal
-            'rgba(173, 216, 230, 1)',// Light Blue
-            'rgba(255, 105, 180, 1)',// Hot Pink
-            'rgba(0, 0, 0, 1)',    // Black
-            'rgba(128, 128, 128, 1)',// Grey
-            'rgba(255, 215, 0, 1)', // Gold
-            'rgba(70, 130, 180, 1)' // Steel Blue
+            'rgba(74, 125, 255, 1)',   // Primary Blue
+            'rgba(142, 68, 173, 1)',   // Purple
+            'rgba(46, 204, 113, 1)',   // Green
+            'rgba(241, 196, 15, 1)',   // Yellow
+            'rgba(26, 188, 156, 1)',   // Teal
+            'rgba(243, 156, 18, 1)',   // Orange
+            'rgba(155, 89, 182, 1)',   // Light Purple
+            'rgba(52, 152, 219, 1)',   // Light Blue
+            'rgba(230, 126, 34, 1)',   // Dark Orange
+            'rgba(231, 76, 60, 1)'     // Red
         ];
 
         const datasets = [];
@@ -286,6 +342,31 @@ export class ChartManager {
             }
         });
 
+        // Calculate the maximum value to determine appropriate scaling
+        const allValues = datasets.flatMap(dataset => dataset.data);
+        const maxValue = Math.max(...allValues);
+        
+        // Determine appropriate step size based on data range
+        let stepSize;
+        let maxTicksLimit;
+        
+        if (maxValue <= 0.1) {
+            stepSize = 0.02; // For very small values (0-0.1 hours)
+            maxTicksLimit = 6;
+        } else if (maxValue <= 1) {
+            stepSize = 0.1; // For small values (0-1 hours)
+            maxTicksLimit = 6;
+        } else if (maxValue <= 5) {
+            stepSize = 0.5; // For medium values (0-5 hours)
+            maxTicksLimit = 8;
+        } else if (maxValue <= 10) {
+            stepSize = 1; // For larger values (0-10 hours)
+            maxTicksLimit = 8;
+        } else {
+            stepSize = Math.ceil(maxValue / 8); // For very large values
+            maxTicksLimit = 8;
+        }
+
         const options = {
             plugins: {
                 title: {
@@ -299,7 +380,14 @@ export class ChartManager {
                                 label += ': ';
                             }
                             if (context.parsed.y !== null) {
-                                label += `${context.parsed.y} Stunden`;
+                                // Format hours more appropriately
+                                const hours = context.parsed.y;
+                                if (hours < 1) {
+                                    const minutes = Math.round(hours * 60);
+                                    label += `${minutes} Minuten`;
+                                } else {
+                                    label += `${hours.toFixed(1)} Stunden`;
+                                }
                             }
                             return label;
                         }
@@ -309,17 +397,50 @@ export class ChartManager {
             scales: {
                 x: {
                     title: {
-                        text: 'Monat'
+                        text: 'Monat',
+                        display: true,
+                        color: 'var(--text-secondary)',
+                        font: {
+                            size: 12
+                        }
+                    },
+                    ticks: {
+                        color: 'var(--text-secondary)',
+                        maxRotation: 0, // Keep labels horizontal
+                        minRotation: 0,
+                        padding: 8 // Add padding around labels
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
                     }
                 },
                 y: {
                     title: {
-                        text: 'Stunden'
+                        text: 'Zeit',
+                        display: true,
+                        color: 'var(--text-secondary)',
+                        font: {
+                            size: 12
+                        }
                     },
+                    beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return value.toFixed(1);
-                        }
+                            // Format Y-axis labels appropriately
+                            if (value < 1) {
+                                const minutes = Math.round(value * 60);
+                                return `${minutes}min`;
+                            } else {
+                                return `${value.toFixed(1)}h`;
+                            }
+                        },
+                        maxTicksLimit: maxTicksLimit,
+                        stepSize: stepSize,
+                        color: 'var(--text-secondary)',
+                        padding: 5
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
                     }
                 }
             }
@@ -333,6 +454,20 @@ export class ChartManager {
      * @param {Array} bottles - Array of bottle objects with operation history.
      */
     createBottleHistoryChart(bottles) {
+        // Consistent color palette for bottle history
+        const colors = [
+            'rgba(74, 125, 255, 1)',   // Primary Blue
+            'rgba(142, 68, 173, 1)',   // Purple
+            'rgba(46, 204, 113, 1)',   // Green
+            'rgba(241, 196, 15, 1)',   // Yellow
+            'rgba(26, 188, 156, 1)',   // Teal
+            'rgba(243, 156, 18, 1)',   // Orange
+            'rgba(155, 89, 182, 1)',   // Light Purple
+            'rgba(52, 152, 219, 1)',   // Light Blue
+            'rgba(230, 126, 34, 1)',   // Dark Orange
+            'rgba(231, 76, 60, 1)'     // Red
+        ];
+
         const datasets = bottles.map((bottle, index) => {
             const sortedOperations = bottle.operations ? 
                 [...bottle.operations].sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
@@ -356,7 +491,7 @@ export class ChartManager {
             return {
                 label: `Flasche #${bottle.id}`,
                 data: dataPoints,
-                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                borderColor: colors[index % colors.length],
                 fill: false,
                 tension: 0.1
             };
