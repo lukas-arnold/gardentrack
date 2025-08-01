@@ -1105,3 +1105,154 @@ body.dark-mode .dark-mode-toggle:hover {
         font-size: 1.3em; /* Smaller title for overview cards */
     }
 }
+
+/* New styles for the table section */
+
+.table-section {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow);
+    transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.table-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-sm);
+    transition: color 0.3s ease, border-bottom 0.3s ease;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto; /* Enable horizontal scrolling on small screens */
+}
+
+#device-entries-table {
+    width: 100%;
+    border-collapse: collapse; /* Collapse borders for a cleaner look */
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+#device-entries-table thead tr {
+    background-color: var(--card-bg-light);
+    border-bottom: 2px solid var(--border-color);
+    transition: background-color 0.4s ease, border-bottom 0.3s ease;
+}
+
+#device-entries-table th,
+#device-entries-table td {
+    padding: var(--spacing-sm) var(--spacing-md); /* Consistent padding */
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color); /* Light border for rows */
+    transition: border-bottom 0.3s ease, color 0.3s ease;
+}
+
+#device-entries-table th {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase; /* Uppercase table headers */
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+    white-space: nowrap; /* Prevent headers from wrapping */
+}
+
+#device-entries-table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+#device-entries-table tbody tr:hover {
+    background-color: var(--card-bg-light); /* Highlight row on hover */
+}
+
+#device-entries-table td {
+    color: var(--text-secondary);
+}
+
+#device-entries-table td:first-child {
+    font-weight: 500;
+    color: var(--text-primary); /* Device name slightly bolder */
+}
+
+/* Specific styling for the delete button within the table */
+#device-entries-table .btn-delete {
+    background-color: var(--danger-color);
+    color: var(--white-text);
+    border: none;
+    border-radius: var(--border-radius-small);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.25s ease, transform 0.25s ease;
+}
+
+#device-entries-table .btn-delete:hover {
+    background-color: #c82333; /* Darker red hover */
+    transform: translateY(-1px);
+}
+
+/* Mobile Responsiveness for Table */
+@media (max-width: 768px) {
+    .table-section {
+        padding: var(--spacing-md);
+    }
+
+    .table-section h2 {
+        font-size: 1.3rem;
+        text-align: center;
+    }
+
+    #device-entries-table,
+    #device-entries-table thead,
+    #device-entries-table tbody,
+    #device-entries-table th,
+    #device-entries-table td,
+    #device-entries-table tr {
+        display: block;
+    }
+    
+    #device-entries-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    #device-entries-table tr {
+        border: 1px solid var(--border-color);
+        margin-bottom: var(--spacing-sm);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--box-shadow-small);
+        background-color: var(--card-bg);
+    }
+    #device-entries-table tr:hover {
+        background-color: var(--card-bg); /* No change on hover to prevent flickering */
+    }
+
+    #device-entries-table td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+    }
+    
+    #device-entries-table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: var(--spacing-md);
+        font-weight: 600;
+        color: var(--text-primary);
+        text-align: left;
+    }
+    
+    #device-entries-table td:last-child {
+        text-align: center;
+    }
+}
