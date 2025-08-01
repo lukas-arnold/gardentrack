@@ -110,8 +110,12 @@
                     <input type="date" id="operation-date" name="date" required>
                 </div>
                 <div class="form-group" id="duration-group">
-                    <label for="operation-duration">Dauer (Minuten)</label>
-                    <input type="number" id="operation-duration" name="duration" min="1">
+                    <label for="operation-duration">Startzeit</label>
+                    <input type="time" id="operation-duration" name="startTime" min="1">
+                </div>
+                <div class="form-group" id="duration-group">
+                    <label for="operation-duration">Endzeit</label>
+                    <input type="time" id="operation-duration" name="endTime" min="1">
                 </div>
                 <div class="form-group" id="weight-group" style="display: none;">
                     <label for="operation-weight">Gewicht (kg)</label>

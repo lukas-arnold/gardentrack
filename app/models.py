@@ -1,6 +1,6 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
-from datetime import date as date_
+from datetime import datetime, date as date_
 
 
 class BaseDevices(DeclarativeBase):
@@ -24,7 +24,7 @@ class DevicesDB(BaseDevices, BaseModelMixin):
     operations: Mapped[list["DeviceOperationsDB"]] = relationship(
         back_populates="device",
         cascade="all, delete-orphan",
-        order_by="DeviceOperationsDB.date.desc()",
+        order_by="DeviceOperationsDB.start_time.desc()",
     )
 
 
@@ -32,8 +32,8 @@ class DeviceOperationsDB(BaseDevices, BaseModelMixin):
     __tablename__ = "device_operations"
 
     device_id: Mapped[int] = mapped_column(ForeignKey("devices.id"), nullable=False)
-    date: Mapped[date_] = mapped_column(nullable=False)
-    duration: Mapped[int] = mapped_column(nullable=False)
+    start_time: Mapped[datetime] = mapped_column(nullable=False)
+    end_time: Mapped[datetime] = mapped_column(nullable=False)
     note: Mapped[str] = mapped_column(nullable=True)
 
     device: Mapped["DevicesDB"] = relationship(back_populates="operations")

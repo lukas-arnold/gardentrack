@@ -21,8 +21,13 @@ export const Utils = {
      */
     formatDateTime(date) {
         if (!date) return '';
-        return new Date(date).toLocaleString();
+        return new Date(date).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false // Optional: für 24-Stunden-Format, falls gewünscht
+        });
     },
+
 
     /**
      * Formats a number into a currency string using the German (de-DE) locale and EUR currency.
