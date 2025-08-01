@@ -30,32 +30,6 @@ export const DeviceManager = {
     },
 
     /**
-     * Binds event listeners to UI elements on the device management page.
-     */
-    bindEvents() {
-        // Event listener for the "Add Device" button to show the device creation modal.
-        document.getElementById('add-device-btn')?.addEventListener('click', () => {
-            UI.clearForm('device-form');
-            UI.showModal('device-modal');
-        });
-
-        // Event listener for the button that toggles the visibility of inactive devices.
-        document.getElementById('toggle-inactive-devices-btn')?.addEventListener('click', () => {
-            this.toggleInactiveDeviceVisibility();
-        });
-
-        // Event listener for the year filter dropdown.
-        document.getElementById('stats-year-filter')?.addEventListener('change', (e) => {
-            // Updates the current year based on the selected value.
-            this.currentStatsYear = parseInt(e.target.value, 10);
-            // Re-renders all UI elements that depend on the selected year.
-            this.renderMonthlyTrendChart();
-            this.renderYearlyDeviceStatistics();
-            this.loadDevices();
-        });
-    },
-
-    /**
      * Loads all initial data required for the device manager's display.
      * This includes populating filters and rendering various statistics and lists.
      */
@@ -71,46 +45,161 @@ export const DeviceManager = {
     },
 
     /**
-     * Fetches all devices to determine the unique years of their operations,
-     * then populates the year filter dropdown with these years.
+     * Fetches device data and renders the device cards on the page.
+     * The list is filtered based on the `showInactiveDevices` flag.
      */
-    async populateYearFilters() {
+    async loadDevices() {
         try {
             const devices = await DeviceAPI.getDevices();
-            const years = new Set();
-            // Collect all unique years from all device operations.
-            devices.forEach(device => {
-                device.operations?.forEach(op => {
-                    years.add(new Date(op.start_time).getFullYear());
-                });
-            });
+            const grid = document.getElementById('device-list');
+            if (grid) {
+                // Filters devices based on the showInactiveDevices flag.
+                const devicesToDisplay = this.showInactiveDevices ? devices : devices.filter(device => device.active);
 
-            const sortedYears = Array.from(years).sort((a, b) => b - a); // Sort years in descending order.
-            const yearFilterSelect = document.getElementById('stats-year-filter');
-            if (yearFilterSelect) {
-                yearFilterSelect.innerHTML = ''; // Clears existing options.
-                // Adds an option for each available year.
-                sortedYears.forEach(year => {
-                    const option = new Option(year, year);
-                    yearFilterSelect.add(option);
-                });
-
-                // Sets the initial selection of the dropdown.
-                if (sortedYears.includes(this.currentStatsYear)) {
-                    yearFilterSelect.value = this.currentStatsYear;
-                } else if (sortedYears.length > 0) {
-                    this.currentStatsYear = sortedYears[0]; // Defaults to the latest year if the current year isn't present.
-                    yearFilterSelect.value = this.currentStatsYear;
+                if (devicesToDisplay.length === 0) {
+                    grid.innerHTML = UI.createEmptyState('tools', 'Keine Geräte', 'Füge dein erstes Gerät hinzu, um Einsätze zu verfolgen.');
                 } else {
-                    // Fallback for when there are no operations yet.
-                    this.currentStatsYear = new Date().getFullYear();
-                    yearFilterSelect.add(new Option(this.currentStatsYear, this.currentStatsYear));
-                    yearFilterSelect.value = this.currentStatsYear;
+                    // Generates and renders the device cards, passing the currentStatsYear for filtering.
+                    grid.innerHTML = devicesToDisplay.map(device => this.createDeviceCard(device, this.currentStatsYear)).join('');
                 }
+                this.bindDeviceCardEvents();
+                this.updateToggleButtonStyle();
             }
         } catch (error) {
-            console.error('Failed to populate year filters:', error);
+            console.error('Failed to load devices:', error);
+            const grid = document.getElementById('device-list');
+            if (grid) {
+                grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Geräte', 'Gerätedaten konnten nicht geladen werden.');
+            }
         }
+    },
+
+    async loadDeviceEntries() {
+        try {
+            const devices = await DeviceAPI.getDevices();
+            const activeDevices = devices.filter(device => device.active);
+
+            const tableBody = document.getElementById('device-entries-table-body');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = ''; // Clear existing entries
+
+            activeDevices.forEach(device => {
+                const operations = device.operations;
+
+                operations.forEach(operation => {
+                    const durationInMinutes = (new Date(operation.end_time).getTime() - new Date(operation.start_time).getTime()) / 60000;
+                    const row = tableBody.insertRow();
+                    row.dataset.id = device.id; // Store ID on the row
+
+                    row.innerHTML = `
+                        <td>${(device.name)}</td>
+                        <td>${Utils.formatDate(operation.start_time)}</td>
+                        <td>${Utils.formatDateTime(operation.start_time)}</td>
+                        <td>${Utils.formatDateTime(operation.end_time)}</td>
+                        <td>${Utils.formatDuration(durationInMinutes)}</td>
+                        <td>${operation.note ? operation.note : ""}</td>
+                        <td>
+                            <button class="btn-delete" data-id="${device.id}">Löschen</button>
+                        </td>
+                    `;
+                    // Attach event listener directly after creation for efficiency
+                    row.querySelector('.btn-delete').addEventListener('click', () => this.deleteOperation(operation.id));
+                })
+            });
+        } catch (error) {
+            console.error('Error loading device entries:', error);
+            showMessage(`Fehler beim Laden der Geräte-Einträge: ${error.message}`, 'error');
+        }
+    },
+    
+    /**
+     * Toggles the visibility of inactive devices and reloads the device list.
+     */
+    toggleInactiveDeviceVisibility() {
+        this.showInactiveDevices = !this.showInactiveDevices;
+        this.loadDevices();
+        this.updateToggleButtonStyle();
+    },
+
+    /**
+     * Updates the text and style of the toggle button based on the current visibility state.
+     */
+    updateToggleButtonStyle() {
+        const toggleButton = document.getElementById('toggle-inactive-devices-btn');
+        if (toggleButton) {
+            if (this.showInactiveDevices) {
+                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Inaktive ausblenden';
+                toggleButton.classList.remove('btn-secondary');
+                toggleButton.classList.add('btn-info');
+            } else {
+                toggleButton.innerHTML = '<i class="fas fa-eye"></i> Inaktive anzeigen';
+                toggleButton.classList.remove('btn-info');
+                toggleButton.classList.add('btn-secondary');
+            }
+        }
+    },
+    
+    /**
+     * Creates the HTML string for a single device card.
+     * @param {Object} device - The device data object.
+     * @param {number|string} yearFilter - The year to filter operations by for the card's summary.
+     * @returns {string} The HTML string for the device card.
+     */
+    createDeviceCard(device, yearFilter) {
+        // Filters operations by year for the summary displayed *within* the card
+        const filteredOperations = device.operations?.filter(op =>
+            yearFilter === 'all' || new Date(op.start_time).getFullYear() === yearFilter
+        ) || [];
+
+        const operationsCount = filteredOperations.length;
+        // Sorts operations by start_time descending to get the last operation for the filtered year.
+        const lastOperation = filteredOperations.sort((a, b) => new Date(b.start_time) - new Date(a.start_time))[0];
+        const totalDuration = filteredOperations.reduce((sum, op) => sum + (new Date(op.end_time).getTime() - new Date(op.start_time).getTime()) / 60000, 0) || 0;
+
+
+        return `
+            <div class="card ${!device.active && !this.showInactiveDevices ? 'hidden-inactive' : ''}" data-device-id="${device.id}">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-wrench"></i>
+                        ${device.name}
+                    </h3>
+                    <div class="card-actions">
+                        <span class="status-badge ${device.active ? 'status-active' : 'status-inactive'}">
+                            <i class="fas fa-circle" style="font-size: 0.6em;"></i>
+                            ${device.active ? 'Aktiv' : 'Inaktiv'}
+                        </span>
+                        <button class="btn btn-sm btn-primary add-operation-btn" data-id="${device.id}" data-type="device">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="btn btn-sm btn-${device.active ? 'secondary' : 'success'} toggle-active-btn" data-id="${device.id}" data-active="${device.active}">
+                            <i class="fas fa-${device.active ? 'archive' : 'undo'}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-device-btn" data-id="${device.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-info">
+                        <div class="info-item">
+                            <span class="info-label">Gesamteinsätze (${yearFilter})</span>
+                            <span class="info-value">${operationsCount}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Gesamtbetriebszeit (${yearFilter})</span>
+                            <span class="info-value">${Utils.formatDuration(totalDuration)}</span>
+                        </div>
+                        ${lastOperation ? `
+                        <div class="info-item">
+                            <span class="info-label">Zuletzt benutzt (${yearFilter})</span>
+                            <span class="info-value">${Utils.formatDate(lastOperation.start_time)}</span>
+                        </div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
     },
 
     /**
@@ -160,42 +249,52 @@ export const DeviceManager = {
         }
     },
 
-    async loadDeviceEntries() {
+    /**
+     * Renders a grid of yearly device statistics, showing total hours and operations
+     * for the currently selected year.
+     */
+    async renderYearlyDeviceStatistics() {
+        const yearlyStatsGrid = document.getElementById('yearly-device-statistics');
+        if (!yearlyStatsGrid) return;
+
         try {
             const devices = await DeviceAPI.getDevices();
             const activeDevices = devices.filter(device => device.active);
 
-            const tableBody = document.getElementById('device-entries-table-body');
-            if (!tableBody) return;
+            if (activeDevices.length === 0) {
+                yearlyStatsGrid.innerHTML = UI.createEmptyState('chart-bar', 'Keine Statistiken verfügbar', 'Füge aktive Geräte und Einsätze hinzu, um Statistiken zu sehen.');
+                return;
+            }
 
-            tableBody.innerHTML = ''; // Clear existing entries
+            // Generates and renders yearly statistic cards for active devices.
+            yearlyStatsGrid.innerHTML = activeDevices.map(device => {
+                // Filters operations by the currently selected year.
+                const filteredOperations = device.operations?.filter(op =>
+                    new Date(op.start_time).getFullYear() === this.currentStatsYear
+                ) || [];
 
-            activeDevices.forEach(device => {
-                const operations = device.operations;
+                const operationsCount = filteredOperations.length;
+                const totalDuration = filteredOperations.reduce((sum, op) => sum + (new Date(op.end_time).getTime() - new Date(op.start_time).getTime()) / 60000, 0);
 
-                operations.forEach(operation => {
-                    const durationInMinutes = (new Date(operation.end_time).getTime() - new Date(operation.start_time).getTime()) / 60000;
-                    const row = tableBody.insertRow();
-                    row.dataset.id = device.id; // Store ID on the row
+                const displayDurationHours = (totalDuration / 60).toFixed(2);
+                const displayDurationText = `${displayDurationHours}h`;
 
-                    row.innerHTML = `
-                        <td>${(device.name)}</td>
-                        <td>${Utils.formatDate(operation.start_time)}</td>
-                        <td>${Utils.formatDateTime(operation.start_time)}</td>
-                        <td>${Utils.formatDateTime(operation.end_time)}</td>
-                        <td>${Utils.formatDuration(durationInMinutes)}</td>
-                        <td>${operation.note ? operation.note : ""}</td>
-                        <td>
-                            <button class="btn-delete" data-id="${device.id}">Löschen</button>
-                        </td>
-                    `;
-                    // Attach event listener directly after creation for efficiency
-                    row.querySelector('.btn-delete').addEventListener('click', () => this.deleteOperation(operation.id));
-                })
-            });
+                return `
+                    <div class="statistic-card device-statistic-overview-card">
+                        <div class="card-header">
+                            <h4 class="card-title">${device.name}</h4>
+                        </div>
+                        <div class="card-body">
+                            <span class="statistic-value">${displayDurationText}</span>
+                            <span class="statistic-sub-value">${totalDuration} Minuten</span>
+                            <span class="statistic-sub-value">${operationsCount} Einsätze</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         } catch (error) {
-            console.error('Error loading device entries:', error);
-            showMessage(`Fehler beim Laden der Geräte-Einträge: ${error.message}`, 'error');
+            console.error('Failed to render yearly device statistics:', error);
+            yearlyStatsGrid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Statistiken', 'Statistikdaten konnten nicht geladen werden.');
         }
     },
 
@@ -350,148 +449,32 @@ export const DeviceManager = {
             }
         }
     },
-
+    
     /**
-     * Fetches device data and renders the device cards on the page.
-     * The list is filtered based on the `showInactiveDevices` flag.
+     * Binds event listeners to UI elements on the device management page.
      */
-    async loadDevices() {
-        try {
-            const devices = await DeviceAPI.getDevices();
-            const grid = document.getElementById('device-list');
-            if (grid) {
-                // Filters devices based on the showInactiveDevices flag.
-                const devicesToDisplay = this.showInactiveDevices ? devices : devices.filter(device => device.active);
+    bindEvents() {
+        // Event listener for the "Add Device" button to show the device creation modal.
+        document.getElementById('add-device-btn')?.addEventListener('click', () => {
+            UI.clearForm('device-form');
+            UI.showModal('device-modal');
+        });
 
-                if (devicesToDisplay.length === 0) {
-                    grid.innerHTML = UI.createEmptyState('tools', 'Keine Geräte', 'Füge dein erstes Gerät hinzu, um Einsätze zu verfolgen.');
-                } else {
-                    // Generates and renders the device cards, passing the currentStatsYear for filtering.
-                    grid.innerHTML = devicesToDisplay.map(device => this.createDeviceCard(device, this.currentStatsYear)).join('');
-                }
-                this.bindDeviceCardEvents();
-                this.updateToggleButtonStyle();
-            }
-        } catch (error) {
-            console.error('Failed to load devices:', error);
-            const grid = document.getElementById('device-list');
-            if (grid) {
-                grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Geräte', 'Gerätedaten konnten nicht geladen werden.');
-            }
-        }
+        // Event listener for the button that toggles the visibility of inactive devices.
+        document.getElementById('toggle-inactive-devices-btn')?.addEventListener('click', () => {
+            this.toggleInactiveDeviceVisibility();
+        });
+
+        // Event listener for the year filter dropdown.
+        document.getElementById('stats-year-filter')?.addEventListener('change', (e) => {
+            // Updates the current year based on the selected value.
+            this.currentStatsYear = parseInt(e.target.value, 10);
+            // Re-renders all UI elements that depend on the selected year.
+            this.renderMonthlyTrendChart();
+            this.renderYearlyDeviceStatistics();
+            this.loadDevices();
+        });
     },
-
-    /**
-     * Creates the HTML string for a single device card.
-     * @param {Object} device - The device data object.
-     * @param {number|string} yearFilter - The year to filter operations by for the card's summary.
-     * @returns {string} The HTML string for the device card.
-     */
-    createDeviceCard(device, yearFilter) {
-        // Filters operations by year for the summary displayed *within* the card
-        const filteredOperations = device.operations?.filter(op =>
-            yearFilter === 'all' || new Date(op.start_time).getFullYear() === yearFilter
-        ) || [];
-
-        const operationsCount = filteredOperations.length;
-        // Sorts operations by start_time descending to get the last operation for the filtered year.
-        const lastOperation = filteredOperations.sort((a, b) => new Date(b.start_time) - new Date(a.start_time))[0];
-        const totalDuration = filteredOperations.reduce((sum, op) => sum + (new Date(op.end_time).getTime() - new Date(op.start_time).getTime()) / 60000, 0) || 0;
-
-
-        return `
-            <div class="card ${!device.active && !this.showInactiveDevices ? 'hidden-inactive' : ''}" data-device-id="${device.id}">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-wrench"></i>
-                        ${device.name}
-                    </h3>
-                    <div class="card-actions">
-                        <span class="status-badge ${device.active ? 'status-active' : 'status-inactive'}">
-                            <i class="fas fa-circle" style="font-size: 0.6em;"></i>
-                            ${device.active ? 'Aktiv' : 'Inaktiv'}
-                        </span>
-                        <button class="btn btn-sm btn-primary add-operation-btn" data-id="${device.id}" data-type="device">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                        <button class="btn btn-sm btn-${device.active ? 'secondary' : 'success'} toggle-active-btn" data-id="${device.id}" data-active="${device.active}">
-                            <i class="fas fa-${device.active ? 'archive' : 'undo'}"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-device-btn" data-id="${device.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="card-info">
-                        <div class="info-item">
-                            <span class="info-label">Gesamteinsätze (${yearFilter})</span>
-                            <span class="info-value">${operationsCount}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Gesamtbetriebszeit (${yearFilter})</span>
-                            <span class="info-value">${Utils.formatDuration(totalDuration)}</span>
-                        </div>
-                        ${lastOperation ? `
-                        <div class="info-item">
-                            <span class="info-label">Zuletzt benutzt (${yearFilter})</span>
-                            <span class="info-value">${Utils.formatDate(lastOperation.start_time)}</span>
-                        </div>` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    /**
-     * Renders a grid of yearly device statistics, showing total hours and operations
-     * for the currently selected year.
-     */
-    async renderYearlyDeviceStatistics() {
-        const yearlyStatsGrid = document.getElementById('yearly-device-statistics');
-        if (!yearlyStatsGrid) return;
-
-        try {
-            const devices = await DeviceAPI.getDevices();
-            const activeDevices = devices.filter(device => device.active);
-
-            if (activeDevices.length === 0) {
-                yearlyStatsGrid.innerHTML = UI.createEmptyState('chart-bar', 'Keine Statistiken verfügbar', 'Füge aktive Geräte und Einsätze hinzu, um Statistiken zu sehen.');
-                return;
-            }
-
-            // Generates and renders yearly statistic cards for active devices.
-            yearlyStatsGrid.innerHTML = activeDevices.map(device => {
-                // Filters operations by the currently selected year.
-                const filteredOperations = device.operations?.filter(op =>
-                    new Date(op.start_time).getFullYear() === this.currentStatsYear
-                ) || [];
-
-                const operationsCount = filteredOperations.length;
-                const totalDuration = filteredOperations.reduce((sum, op) => sum + (new Date(op.end_time).getTime() - new Date(op.start_time).getTime()) / 60000, 0);
-
-                const displayDurationHours = (totalDuration / 60).toFixed(2);
-                const displayDurationText = `${displayDurationHours}h`;
-
-                return `
-                    <div class="statistic-card device-statistic-overview-card">
-                        <div class="card-header">
-                            <h4 class="card-title">${device.name}</h4>
-                        </div>
-                        <div class="card-body">
-                            <span class="statistic-value">${displayDurationText}</span>
-                            <span class="statistic-sub-value">${totalDuration} Minuten</span>
-                            <span class="statistic-sub-value">${operationsCount} Einsätze</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } catch (error) {
-            console.error('Failed to render yearly device statistics:', error);
-            yearlyStatsGrid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Statistiken', 'Statistikdaten konnten nicht geladen werden.');
-        }
-    },
-
 
     /**
      * Binds event listeners to the action buttons within each device card.
@@ -597,6 +580,26 @@ export const DeviceManager = {
             console.error('Failed to add device operation:', error);
         }
     },
+    
+    /**
+     * Toggles a device's active/inactive status and updates it via the API.
+     * @param {number} deviceId - The ID of the device to update.
+     * @param {boolean} newStatus - The new active status (true for active, false for inactive).
+     */
+    async toggleDeviceActiveStatus(deviceId, newStatus) {
+        const actionText = newStatus ? 'aktivieren' : 'deaktivieren';
+        if (!confirm(`Bist du sicher, dass du dieses Gerät ${actionText} möchtest?`)) {
+            return;
+        }
+
+        try {
+            await DeviceAPI.updateDevice(deviceId, { active: newStatus });
+            UI.showToast(`Gerät erfolgreich ${actionText}!`, 'success');
+            this.loadInitialData(); // Call loadInitialData to refresh all UI elements
+        } catch (error) {
+            console.error(`Failed to ${actionText} device:`, error);
+        }
+    },
 
     /**
      * Deletes a device after a confirmation from the user.
@@ -645,51 +648,47 @@ export const DeviceManager = {
             }
         );
     },
-
+    
     /**
-     * Toggles a device's active/inactive status and updates it via the API.
-     * @param {number} deviceId - The ID of the device to update.
-     * @param {boolean} newStatus - The new active status (true for active, false for inactive).
+     * Fetches all devices to determine the unique years of their operations,
+     * then populates the year filter dropdown with these years.
      */
-    async toggleDeviceActiveStatus(deviceId, newStatus) {
-        const actionText = newStatus ? 'aktivieren' : 'deaktivieren';
-        if (!confirm(`Bist du sicher, dass du dieses Gerät ${actionText} möchtest?`)) {
-            return;
-        }
-
+    async populateYearFilters() {
         try {
-            await DeviceAPI.updateDevice(deviceId, { active: newStatus });
-            UI.showToast(`Gerät erfolgreich ${actionText}!`, 'success');
-            this.loadInitialData(); // Call loadInitialData to refresh all UI elements
-        } catch (error) {
-            console.error(`Failed to ${actionText} device:`, error);
-        }
-    },
+            const devices = await DeviceAPI.getDevices();
+            const years = new Set();
+            // Collect all unique years from all device operations.
+            devices.forEach(device => {
+                device.operations?.forEach(op => {
+                    years.add(new Date(op.start_time).getFullYear());
+                });
+            });
 
-    /**
-     * Toggles the visibility of inactive devices and reloads the device list.
-     */
-    toggleInactiveDeviceVisibility() {
-        this.showInactiveDevices = !this.showInactiveDevices;
-        this.loadDevices();
-        this.updateToggleButtonStyle();
-    },
+            const sortedYears = Array.from(years).sort((a, b) => b - a); // Sort years in descending order.
+            const yearFilterSelect = document.getElementById('stats-year-filter');
+            if (yearFilterSelect) {
+                yearFilterSelect.innerHTML = ''; // Clears existing options.
+                // Adds an option for each available year.
+                sortedYears.forEach(year => {
+                    const option = new Option(year, year);
+                    yearFilterSelect.add(option);
+                });
 
-    /**
-     * Updates the text and style of the toggle button based on the current visibility state.
-     */
-    updateToggleButtonStyle() {
-        const toggleButton = document.getElementById('toggle-inactive-devices-btn');
-        if (toggleButton) {
-            if (this.showInactiveDevices) {
-                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Inaktive ausblenden';
-                toggleButton.classList.remove('btn-secondary');
-                toggleButton.classList.add('btn-info');
-            } else {
-                toggleButton.innerHTML = '<i class="fas fa-eye"></i> Inaktive anzeigen';
-                toggleButton.classList.remove('btn-info');
-                toggleButton.classList.add('btn-secondary');
+                // Sets the initial selection of the dropdown.
+                if (sortedYears.includes(this.currentStatsYear)) {
+                    yearFilterSelect.value = this.currentStatsYear;
+                } else if (sortedYears.length > 0) {
+                    this.currentStatsYear = sortedYears[0]; // Defaults to the latest year if the current year isn't present.
+                    yearFilterSelect.value = this.currentStatsYear;
+                } else {
+                    // Fallback for when there are no operations yet.
+                    this.currentStatsYear = new Date().getFullYear();
+                    yearFilterSelect.add(new Option(this.currentStatsYear, this.currentStatsYear));
+                    yearFilterSelect.value = this.currentStatsYear;
+                }
             }
+        } catch (error) {
+            console.error('Failed to populate year filters:', error);
         }
-    }
+    },
 };
