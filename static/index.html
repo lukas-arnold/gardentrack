@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GardenTrack</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header class="header">
@@ -127,13 +129,27 @@
         </div>
     </div>
 
+    <div class="modal" id="delete-modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="delete-modal-title">Löschen bestätigen</h2>
+                <button class="modal-close" id="delete-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="delete-modal-message">Sind Sie sicher, dass Sie dies löschen möchten?</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="delete-cancel-btn">Abbrechen</button>
+                <button class="btn btn-danger" id="delete-confirm-btn">Löschen</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-container" id="toast-container"></div>
 
-    <script src="/static/js/config.js"></script>
-    <script src="/static/js/utils.js"></script>
-    <script src="/static/js/api.js"></script>
-    <script src="/static/js/ui.js"></script>
-    <script src="/static/js/devices.js"></script> <script src="/static/js/bottles.js"></script> <script src="/static/js/app.js"></script>
+    <script type="module" src="/static/js/app.js"></script>
     <script src="/static/js/darkMode.js"></script>
 </body>
 </html>

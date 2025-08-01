@@ -1,90 +1,136 @@
-const BottleManager = {
+import { BottleAPI } from "./api.js";
+import { UI } from "./ui.js";
+import { Utils } from "./utils.js";
+
+/**
+ * The BottleManager object handles all logic and functionality related to managing gas bottles.
+ * @namespace BottleManager
+ */
+export const BottleManager = {
+    // Flag to track whether inactive bottles should be displayed.
+    showInactiveBottles: false,
+    // Stores the Chart.js instance for the consumption bar chart.
+    currentChart: null,
+    // Stores the Chart.js instance for the history line chart.
+    historyChart: null,
+
+    /**
+     * Initializes the manager by setting default states, binding events, and loading data.
+     */
     init() {
         this.showInactiveBottles = false;
-        this.currentChart = null; // For the consumption chart
-        this.historyChart = null; // New: To store the history Chart.js instance
+        this.currentChart = null;
+        this.historyChart = null;
         this.bindEvents();
         this.loadBottles();
     },
 
+    /**
+     * Binds event listeners to buttons and other elements on the bottle management page.
+     */
     bindEvents() {
-        document.getElementById('add-bottle-btn')?.addEventListener('click', () => {
-            UI.clearForm('bottle-form');
-            UI.showModal('bottle-modal');
+        // Listener for the "Add Bottle" button to show the bottle creation modal.
+        document.getElementById("add-bottle-btn")?.addEventListener("click", () => {
+            UI.clearForm("bottle-form");
+            UI.showModal("bottle-modal");
         });
 
-        document.getElementById('toggle-inactive-bottles-btn')?.addEventListener('click', () => {
+        // Listener for the "Toggle Inactive Bottles" button to show/hide archived bottles.
+        document.getElementById("toggle-inactive-bottles-btn")?.addEventListener("click", () => {
             this.toggleInactiveBottleVisibility();
         });
     },
 
+    /**
+     * Fetches bottle data from the API and renders the bottle cards and charts.
+     */
     async loadBottles() {
         try {
-            const bottles = await API.getBottles();
-            const grid = document.getElementById('bottle-list');
+            const bottles = await BottleAPI.getBottles();
+            const grid = document.getElementById("bottle-list");
             if (grid) {
-                const bottlesToDisplay = this.showInactiveBottles ? bottles : bottles.filter(bottle => bottle.active);
+                // Filter bottles based on the current visibility setting.
+                const bottlesToDisplay = this.showInactiveBottles
+                    ? bottles
+                    : bottles.filter((bottle) => bottle.active);
 
                 if (bottlesToDisplay.length === 0) {
-                    grid.innerHTML = UI.createEmptyState('gas-pump', 'Keine Gasflaschen', 'Füge deine erste Gasflasche hinzu, um den Verbrauch zu verfolgen.');
+                    // Display an empty state message if no bottles are available.
+                    grid.innerHTML = UI.createEmptyState(
+                        "gas-pump",
+                        "Keine Gasflaschen",
+                        "Füge deine erste Gasflasche hinzu, um den Verbrauch zu verfolgen."
+                    );
+                    // Destroy any existing charts to prevent them from showing stale data.
                     if (this.currentChart) {
                         this.currentChart.destroy();
                         this.currentChart = null;
                     }
-                    if (this.historyChart) { // Destroy history chart as well
+                    if (this.historyChart) {
                         this.historyChart.destroy();
                         this.historyChart = null;
                     }
                 } else {
-                    grid.innerHTML = bottlesToDisplay.map(bottle => this.createBottleCard(bottle)).join('');
+                    // Render the bottle cards and insert them into the grid.
+                    grid.innerHTML = bottlesToDisplay.map((bottle) => this.createBottleCard(bottle)).join("");
 
-                    const activeBottlesForChart = bottlesToDisplay.filter(b => b.active).map(bottle => {
+                    // Prepare data and update the consumption and history charts.
+                    const activeBottlesForChart = bottlesToDisplay.filter((b) => b.active).map((bottle) => {
                         const lastOperation = bottle.operations ? [...bottle.operations].sort((a, b) => new Date(b.date) - new Date(a.date))[0] : null;
                         const currentWeight = lastOperation?.weight !== undefined ? lastOperation.weight : bottle.initial_weight;
                         const bottleWeight = bottle.initial_weight - bottle.filling_weight;
                         const remainingPercentage = bottleWeight > 0 ? (((currentWeight - bottle.filling_weight) / bottleWeight) * 100) : 0;
                         return {
                             id: bottle.id,
-                            percentage: parseFloat(remainingPercentage.toFixed(1))
+                            percentage: parseFloat(remainingPercentage.toFixed(1)),
                         };
                     });
                     this.updateConsumptionChart(activeBottlesForChart);
-
-                    // New: Prepare data and update history chart for active bottles
-                    const activeBottlesWithHistory = bottlesToDisplay.filter(b => b.active);
+                    const activeBottlesWithHistory = bottlesToDisplay.filter((b) => b.active);
                     this.updateBottleHistoryChart(activeBottlesWithHistory);
                 }
+                // Rebind events for the newly created bottle cards and update the toggle button's style.
                 this.bindBottleCardEvents();
                 this.updateToggleButtonStyle();
             }
         } catch (error) {
-            console.error('Failed to load bottles:', error);
-            const grid = document.getElementById('bottle-list');
+            console.error("Failed to load bottles:", error);
+            const grid = document.getElementById("bottle-list");
             if (grid) {
-                grid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Gasflaschen', 'Gasflaschendaten konnten nicht geladen werden.');
+                grid.innerHTML = UI.createEmptyState(
+                    "exclamation-triangle",
+                    "Fehler beim Laden der Gasflaschen",
+                    "Gasflaschendaten konnten nicht geladen werden."
+                );
             }
+            // Destroy charts on error to prevent displaying incorrect information.
             if (this.currentChart) {
                 this.currentChart.destroy();
                 this.currentChart = null;
             }
-            if (this.historyChart) { // Destroy history chart on error
+            if (this.historyChart) {
                 this.historyChart.destroy();
                 this.historyChart = null;
             }
         }
     },
 
+    /**
+     * Creates the HTML string for a single bottle card.
+     * @param {Object} bottle - The bottle data object.
+     * @returns {string} The HTML string for the bottle card.
+     */
     createBottleCard(bottle) {
-        // ... (existing createBottleCard code) ...
+        // Calculate various weight and operation summary metrics for display.
         const operationsCount = bottle.operations?.length || 0;
         const sortedOperations = bottle.operations ? [...bottle.operations].sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
         const lastOperation = sortedOperations[0];
         const currentWeight = lastOperation?.weight !== undefined ? lastOperation.weight : bottle.initial_weight;
-
         const bottleWeight = bottle.initial_weight - bottle.filling_weight;
         const totalUsedGas = (bottle.initial_weight - currentWeight).toFixed(1);
         const remainingGasKg = (currentWeight - bottle.filling_weight).toFixed(1);
 
+        // Returns a template literal containing the full HTML structure for a bottle card.
         return `
             <div class="card ${!bottle.active && !this.showInactiveBottles ? 'hidden-inactive' : ''}" data-bottle-id="${bottle.id}">
                 <div class="card-header">
@@ -171,6 +217,9 @@ const BottleManager = {
         `;
     },
 
+    /**
+     * Binds event listeners to the buttons within each bottle card.
+     */
     bindBottleCardEvents() {
         document.querySelectorAll('.add-operation-btn[data-type="bottle"]').forEach(button => {
             button.onclick = (e) => {
@@ -210,127 +259,171 @@ const BottleManager = {
         });
     },
 
-    handleBottleFormSubmit: async function(e) {
+    /**
+     * Handles the submission of the bottle creation form.
+     * @param {Event} e - The form submission event.
+     */
+    handleBottleFormSubmit: async function (e) {
         e.preventDefault();
         const formData = new FormData(e.target);
 
         try {
             const bottle = {
-                purchase_date: formData.get('purchase_date'),
-                purchase_price: parseFloat(formData.get('purchase_price')),
-                initial_weight: parseFloat(formData.get('initial_weight')),
-                filling_weight: parseFloat(formData.get('filling_weight')),
-                active: true
+                purchase_date: formData.get("purchase_date"),
+                purchase_price: parseFloat(formData.get("purchase_price")),
+                initial_weight: parseFloat(formData.get("initial_weight")),
+                filling_weight: parseFloat(formData.get("filling_weight")),
+                active: true,
             };
 
-            await API.createBottle(bottle);
-            UI.showToast('Gasflasche erfolgreich erstellt!', 'success');
-            UI.hideModal('bottle-modal');
-            UI.clearForm('bottle-form');
-            BottleManager.loadBottles();
+            await BottleAPI.createBottle(bottle);
+            UI.showToast("Gasflasche erfolgreich erstellt!", "success");
+            UI.hideModal("bottle-modal");
+            UI.clearForm("bottle-form");
+            this.loadBottles();
         } catch (error) {
-            console.error('Failed to create bottle:', error);
-            UI.showToast('Fehler beim Erstellen der Gasflasche.', 'error');
+            console.error("Failed to create bottle:", error);
+            UI.showToast("Fehler beim Erstellen der Gasflasche.", "error");
         }
     },
 
-    submitOperation: async function(formData, type, targetId) {
-        if (type !== 'bottle') return;
+    /**
+     * Submits a new operation (weight measurement) for a specific bottle.
+     * @param {FormData} formData - The form data containing operation details.
+     * @param {string} type - The type of operation, should be 'bottle'.
+     * @param {number} targetId - The ID of the bottle.
+     */
+    submitOperation: async function (formData, type, targetId) {
+        if (type !== "bottle") return;
 
         const bottleIdAsNumber = parseInt(targetId, 10);
         if (isNaN(bottleIdAsNumber)) {
-            console.error('Invalid bottle ID for operation:', targetId);
-            UI.showToast('Fehler: Flaschen-ID für Messung konnte nicht ermittelt werden.', 'error');
+            console.error("Invalid bottle ID for operation:", targetId);
+            UI.showToast("Fehler: Flaschen-ID für Messung konnte nicht ermittelt werden.", "error");
             return;
         }
 
         try {
             const operation = {
                 bottle_id: bottleIdAsNumber,
-                date: formData.get('date'),
-                weight: parseFloat(formData.get('weight')),
-                note: formData.get('note') || null
+                date: formData.get("date"),
+                weight: parseFloat(formData.get("weight")),
+                note: formData.get("note") || null,
             };
-            await API.createBottleOperation(operation);
-            UI.showToast('Gewichtsmessung erfolgreich hinzugefügt!', 'success');
-            UI.hideModal('operation-modal');
-            UI.clearForm('operation-form');
+            await BottleAPI.createBottleOperation(operation);
+            UI.showToast("Gewichtsmessung erfolgreich hinzugefügt!", "success");
+            UI.hideModal("operation-modal");
+            UI.clearForm("operation-form");
             this.loadBottles();
         } catch (error) {
-            console.error('Failed to add bottle operation:', error);
-            UI.showToast('Fehler beim Hinzufügen der Gewichtsmessung.', 'error');
+            console.error("Failed to add bottle operation:", error);
+            UI.showToast("Fehler beim Hinzufügen der Gewichtsmessung.", "error");
         }
     },
 
+    /**
+     * Deletes a bottle after a confirmation from the user.
+     * @param {number} bottleId - The ID of the bottle to delete.
+     */
     async deleteBottle(bottleId) {
-        if (!confirm('Bist du sicher, dass du diese Gasflasche löschen möchtest? Dies löscht auch alle zugehörigen Messungen.')) {
-            return;
-        }
-
-        try {
-            await API.deleteBottle(bottleId);
-            UI.showToast('Gasflasche erfolgreich gelöscht!', 'success');
-            this.loadBottles();
-        } catch (error) {
-            console.error('Failed to delete bottle:', error);
-            UI.showToast('Fehler beim Löschen der Gasflasche.', 'error');
-        }
+        // Use the new confirmation modal instead of the default browser alert.
+        UI.showConfirmModal(
+            "Gasflasche löschen",
+            "Möchten Sie diese Gasflasche wirklich löschen? Alle zugehörigen Messungen werden ebenfalls entfernt.",
+            async () => {
+                try {
+                    UI.showLoading(true);
+                    await BottleAPI.deleteBottle(bottleId);
+                    UI.showToast('Gasflasche erfolgreich gelöscht.', 'success');
+                    this.loadBottles(); // Reload bottles after deletion
+                } catch (error) {
+                    console.error('Fehler beim Löschen der Gasflasche:', error);
+                    UI.showToast('Fehler beim Löschen der Gasflasche.', 'error');
+                } finally {
+                    UI.showLoading(false);
+                }
+            }
+        );
     },
 
+    /**
+     * Deletes a specific operation (weight measurement) after confirmation.
+     * @param {number} operationId - The ID of the operation to delete.
+     */
     async deleteOperation(operationId) {
-        if (!confirm('Bist du sicher, dass du diese Messung löschen möchtest?')) {
-            return;
-        }
-
-        try {
-            await API.deleteBottleOperation(operationId);
-            UI.showToast('Messung erfolgreich gelöscht!', 'success');
-            this.loadBottles();
-        } catch (error) {
-            console.error('Failed to delete measurement:', error);
-            UI.showToast('Fehler beim Löschen der Messung.', 'error');
-        }
+        UI.showConfirmModal(
+            "Messung löschen",
+            "Möchten Sie diese Messung wirklich löschen?",
+            async () => {
+                try {
+                    UI.showLoading(true);
+                    await BottleAPI.deleteOperation(operationId);
+                    UI.showToast('Messung erfolgreich gelöscht.', 'success');
+                    this.loadBottles(); // Reload bottles to reflect the change
+                } catch (error) {
+                    console.error('Fehler beim Löschen der Messung:', error);
+                    UI.showToast('Fehler beim Löschen der Messung.', 'error');
+                } finally {
+                    UI.showLoading(false);
+                }
+            }
+        );
     },
 
+    /**
+     * Toggles a bottle's active/inactive status and updates it via the API.
+     * @param {number} bottleId - The ID of the bottle to update.
+     * @param {boolean} newStatus - The new active status (true for active, false for inactive).
+     */
     async toggleBottleActiveStatus(bottleId, newStatus) {
-        const actionText = newStatus ? 'aktivieren' : 'deaktivieren';
+        const actionText = newStatus ? "aktivieren" : "deaktivieren";
         if (!confirm(`Bist du sicher, dass du diese Gasflasche ${actionText} möchtest?`)) {
             return;
         }
 
         try {
-            await API.updateBottle(bottleId, { active: newStatus });
-            UI.showToast(`Gasflasche erfolgreich ${actionText}!`, 'success');
+            await BottleAPI.updateBottle(bottleId, { active: newStatus });
+            UI.showToast(`Gasflasche erfolgreich ${actionText}!`, "success");
             this.loadBottles();
         } catch (error) {
             console.error(`Failed to ${actionText} bottle:`, error);
-            UI.showToast(`Fehler beim ${actionText} der Gasflasche.`, 'error');
+            UI.showToast(`Fehler beim ${actionText} der Gasflasche.`, "error");
         }
     },
 
+    /**
+     * Toggles the visibility of inactive bottles and reloads the bottle list.
+     */
     toggleInactiveBottleVisibility() {
         this.showInactiveBottles = !this.showInactiveBottles;
         this.loadBottles();
         this.updateToggleButtonStyle();
     },
 
+    /**
+     * Updates the text and style of the toggle button based on the current visibility state.
+     */
     updateToggleButtonStyle() {
-        const toggleButton = document.getElementById('toggle-inactive-bottles-btn');
+        const toggleButton = document.getElementById("toggle-inactive-bottles-btn");
         if (toggleButton) {
             if (this.showInactiveBottles) {
                 toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Inaktive ausblenden';
-                toggleButton.classList.remove('btn-secondary');
-                toggleButton.classList.add('btn-info');
+                toggleButton.classList.remove("btn-secondary");
+                toggleButton.classList.add("btn-info");
             } else {
                 toggleButton.innerHTML = '<i class="fas fa-eye"></i> Inaktive anzeigen';
-                toggleButton.classList.remove('btn-info');
-                toggleButton.classList.add('btn-secondary');
+                toggleButton.classList.remove("btn-info");
+                toggleButton.classList.add("btn-secondary");
             }
         }
     },
 
+    /**
+     * Renders a bar chart showing the remaining gas percentage for each active bottle.
+     * @param {Array<Object>} bottles - An array of active bottle objects with calculated percentages.
+     */
     updateConsumptionChart(bottles) {
-        const ctx = document.getElementById('consumption-chart')?.getContext('2d');
+        const ctx = document.getElementById("consumption-chart")?.getContext("2d");
 
         if (!ctx) {
             console.warn("Chart canvas element 'consumption-chart' not found.");
@@ -341,50 +434,54 @@ const BottleManager = {
             this.currentChart.destroy();
         }
 
-        const labels = bottles.map(bottle => `Flasche #${bottle.id}`);
-        const data = bottles.map(bottle => bottle.percentage);
-        const backgroundColors = bottles.map(bottle => {
-            if (bottle.percentage >= 50) return 'rgba(46, 204, 113, 0.8)';
-            if (bottle.percentage >= 20) return 'rgba(243, 156, 18, 0.8)';
-            return 'rgba(231, 76, 60, 0.8)';
+        const labels = bottles.map((bottle) => `Flasche #${bottle.id}`);
+        const data = bottles.map((bottle) => bottle.percentage);
+        const backgroundColors = bottles.map((bottle) => {
+            if (bottle.percentage >= 50) return "rgba(46, 204, 113, 0.8)";
+            if (bottle.percentage >= 20) return "rgba(243, 156, 18, 0.8)";
+            return "rgba(231, 76, 60, 0.8)";
         });
 
         this.currentChart = new Chart(ctx, {
-            type: 'bar',
+            type: "bar",
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Füllstand (%)',
+                    label: "Füllstand (%)",
                     data: data,
                     backgroundColor: backgroundColors,
-                    borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
-                    borderWidth: 1
-                }]
+                    borderColor: backgroundColors.map((color) => color.replace("0.8", "1")),
+                    borderWidth: 1,
+                }, ],
             },
             options: {
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: false
-                    }
+                        display: false,
+                    },
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
                         max: 100,
                         ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
+                            callback: function (value) {
+                                return value + "%";
+                            },
+                        },
+                    },
+                },
+            },
         });
     },
 
+    /**
+     * Renders a line chart that displays the historical weight data for each active bottle.
+     * @param {Array<Object>} activeBottles - An array of active bottle objects with their operation histories.
+     */
     updateBottleHistoryChart(activeBottles) {
-        const ctx = document.getElementById('bottle-history-chart')?.getContext('2d'); // Assuming you have a canvas with this ID
+        const ctx = document.getElementById("bottle-history-chart")?.getContext("2d");
 
         if (!ctx) {
             console.warn("Chart canvas element 'bottle-history-chart' not found. Please add a canvas element with id='bottle-history-chart' to your HTML.");
@@ -395,96 +492,86 @@ const BottleManager = {
             this.historyChart.destroy();
         }
 
-        const datasets = activeBottles.map(bottle => {
-            // Sort operations by date in ascending order for the line chart
+        // Prepare datasets for the Chart.js line chart.
+        const datasets = activeBottles.map((bottle) => {
             const sortedOperations = bottle.operations ? [...bottle.operations].sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
-
-            // Include initial weight as the first data point if there are operations
             const dataPoints = [];
-            if (bottle.operations && bottle.operations.length > 0) {
-                // Add the initial weight as the starting point (date can be purchase date or first operation date)
-                dataPoints.push({
-                    x: Utils.formatDate(bottle.purchase_date), // Use purchase date as initial point
-                    y: bottle.initial_weight
-                });
-            } else {
-                // If no operations, just show initial weight (or nothing if you prefer)
-                dataPoints.push({
-                    x: Utils.formatDate(bottle.purchase_date),
-                    y: bottle.initial_weight
-                });
-            }
 
-
-            sortedOperations.forEach(op => {
-                dataPoints.push({
-                    x: Utils.formatDate(op.date),
-                    y: op.weight
-                });
+            // Include initial weight as the starting point for the chart.
+            dataPoints.push({
+                x: Utils.formatDate(bottle.purchase_date),
+                y: bottle.initial_weight,
             });
 
+            // Add each operation as a data point.
+            sortedOperations.forEach((op) => {
+                dataPoints.push({
+                    x: Utils.formatDate(op.date),
+                    y: op.weight,
+                });
+            });
 
             return {
                 label: `Flasche #${bottle.id}`,
                 data: dataPoints,
-                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`, // Random color for each bottle
+                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`, // Assign a random color to each line.
                 fill: false,
-                tension: 0.1
+                tension: 0.1,
             };
         });
 
         this.historyChart = new Chart(ctx, {
-            type: 'line',
+            type: "line",
             data: {
-                datasets: datasets
+                datasets: datasets,
             },
             options: {
                 responsive: true,
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Verlauf des Flaschengewichts (Aktive Flaschen)'
+                        text: "Verlauf des Flaschengewichts (Aktive Flaschen)",
                     },
                     tooltip: {
-                        mode: 'index',
+                        mode: "index",
                         intersect: false,
                         callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
+                            label: function (context) {
+                                let label = context.dataset.label || "";
                                 if (label) {
-                                    label += ': ';
+                                    label += ": ";
                                 }
                                 if (context.parsed.y !== null) {
                                     label += Utils.formatWeight(context.parsed.y);
                                 }
                                 return label;
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 scales: {
                     x: {
-                        type: 'category', // Use 'category' for discrete date labels
-                        labels: datasets.flatMap(dataset => dataset.data.map(point => point.x)).filter((value, index, self) => self.indexOf(value) === index).sort(), // Collect all unique dates and sort them
+                        type: "category",
+                        labels: datasets.flatMap((dataset) => dataset.data.map((point) => point.x)).filter((value, index, self) => self.indexOf(value) === index).sort(),
                         title: {
                             display: true,
-                            text: 'Datum'
-                        }
+                            text: "Datum",
+                        },
                     },
                     y: {
-                        beginAtZero: false, // Weight might not start at zero
+                        beginAtZero: false,
                         title: {
                             display: true,
-                            text: 'Gewicht (kg)'
+                            text: "Gewicht (kg)",
                         },
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return Utils.formatWeight(value);
-                            }
-                        }
-                    }
-                }
-            }
+                            },
+                        },
+                    },
+                },
+            },
         });
-    }
+    },
 };

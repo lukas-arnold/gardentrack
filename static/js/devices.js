@@ -1,69 +1,107 @@
-const DeviceManager = {
+import { DeviceAPI } from "./api.js"
+import { UI } from "./ui.js"
+import { Utils } from "./utils.js"
+
+/**
+ * The DeviceManager object handles all logic and functionality related to managing devices.
+ * It's responsible for loading data, rendering UI components, binding events, and handling
+ * user interactions like adding, deleting, and updating devices and their operations.
+ * @namespace DeviceManager
+ */
+export const DeviceManager = {
+    /** @type {boolean} A flag to control the visibility of inactive devices. */
+    showInactiveDevices: false,
+    
+    /** @type {number} The year currently selected for displaying statistics and charts. */
+    currentStatsYear: new Date().getFullYear(), 
+    
+    /** @type {Chart|null} The Chart.js instance for the monthly operations line chart. */
+    operationsLineChart: null,
+
+    /**
+     * Initializes the manager by setting default states, binding events, and loading data.
+     */
     init() {
         this.showInactiveDevices = false;
-        this.currentStatsYear = new Date().getFullYear(); // Re-introduce currentStatsYear
-        this.operationsLineChart = null; // New property for the line chart instance
+        this.currentStatsYear = new Date().getFullYear(); 
+        this.operationsLineChart = null;
         this.bindEvents();
-        this.loadInitialData(); // Call loadInitialData to get everything rendered
+        this.loadInitialData();
     },
 
+    /**
+     * Binds event listeners to UI elements on the device management page.
+     */
     bindEvents() {
+        // Event listener for the "Add Device" button to show the device creation modal.
         document.getElementById('add-device-btn')?.addEventListener('click', () => {
             UI.clearForm('device-form');
             UI.showModal('device-modal');
         });
 
+        // Event listener for the button that toggles the visibility of inactive devices.
         document.getElementById('toggle-inactive-devices-btn')?.addEventListener('click', () => {
             this.toggleInactiveDeviceVisibility();
         });
 
-        // Event listener for the year filter, now located in charts-section
+        // Event listener for the year filter dropdown.
         document.getElementById('stats-year-filter')?.addEventListener('change', (e) => {
+            // Updates the current year based on the selected value.
             this.currentStatsYear = parseInt(e.target.value, 10);
-            this.renderMonthlyTrendChart(); // Update line chart
-            this.renderYearlyDeviceStatistics(); // Update yearly summary cards
-            this.loadDevices(); // Update device list (for year-filtered operation summaries in cards)
+            // Re-renders all UI elements that depend on the selected year.
+            this.renderMonthlyTrendChart();
+            this.renderYearlyDeviceStatistics();
+            this.loadDevices();
         });
     },
 
+    /**
+     * Loads all initial data required for the device manager's display.
+     * This includes populating filters and rendering various statistics and lists.
+     */
     async loadInitialData() {
-        // Ensure year filters are populated first, as other renders depend on currentStatsYear
+        // Populates the year filter dropdown first, as other components depend on the selected year.
         await this.populateYearFilters();
-        // Render all sections
+        // Renders all summary and list sections.
         await this.renderAllTimeDeviceSummaryStatistics();
-        await this.renderMonthlyTrendChart(); // Render the new line chart
+        await this.renderMonthlyTrendChart();
         await this.renderYearlyDeviceStatistics();
         await this.loadDevices(); // This should be last to ensure all data is ready for card rendering
     },
 
+    /**
+     * Fetches all devices to determine the unique years of their operations,
+     * then populates the year filter dropdown with these years.
+     */
     async populateYearFilters() {
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const years = new Set();
+            // Collect all unique years from all device operations.
             devices.forEach(device => {
                 device.operations?.forEach(op => {
                     years.add(new Date(op.date).getFullYear());
                 });
             });
 
-            const sortedYears = Array.from(years).sort((a, b) => b - a); // Descending order
+            const sortedYears = Array.from(years).sort((a, b) => b - a); // Sort years in descending order.
             const yearFilterSelect = document.getElementById('stats-year-filter');
             if (yearFilterSelect) {
-                yearFilterSelect.innerHTML = ''; // Clear previous options
-                // Add an option for each year
+                yearFilterSelect.innerHTML = ''; // Clears existing options.
+                // Adds an option for each available year.
                 sortedYears.forEach(year => {
                     const option = new Option(year, year);
                     yearFilterSelect.add(option);
                 });
 
-                // Set initial selection to current year or the latest available year
+                // Sets the initial selection of the dropdown.
                 if (sortedYears.includes(this.currentStatsYear)) {
                     yearFilterSelect.value = this.currentStatsYear;
                 } else if (sortedYears.length > 0) {
-                    this.currentStatsYear = sortedYears[0]; // Set to latest year if current not available
+                    this.currentStatsYear = sortedYears[0]; // Defaults to the latest year if the current year isn't present.
                     yearFilterSelect.value = this.currentStatsYear;
                 } else {
-                    // Fallback: if no operations yet, just add current year as an option
+                    // Fallback for when there are no operations yet.
                     this.currentStatsYear = new Date().getFullYear();
                     yearFilterSelect.add(new Option(this.currentStatsYear, this.currentStatsYear));
                     yearFilterSelect.value = this.currentStatsYear;
@@ -74,20 +112,26 @@ const DeviceManager = {
         }
     },
 
+    /**
+     * Renders a summary of all-time device statistics, such as total runtime and operation count.
+     */
     async renderAllTimeDeviceSummaryStatistics() {
         const allTimeSummaryGrid = document.getElementById('all-time-device-summary-grid');
         if (!allTimeSummaryGrid) return;
 
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const activeDevices = devices.filter(device => device.active);
 
+            // Displays a message if there are no active devices.
             if (activeDevices.length === 0) {
                 allTimeSummaryGrid.innerHTML = UI.createEmptyState('tools', 'Keine Geräte', 'Füge Geräte hinzu, um Gesamtstatistiken zu sehen.');
                 return;
             }
 
+            // Maps active devices to HTML summary cards and joins them into a single string.
             allTimeSummaryGrid.innerHTML = activeDevices.map(device => {
+                // Calculates total duration and operation count for all time.
                 const totalDuration = device.operations?.reduce((sum, op) => sum + op.duration, 0) || 0;
                 const operationsCount = device.operations?.length || 0;
 
@@ -115,13 +159,16 @@ const DeviceManager = {
         }
     },
 
-    // NEW: Function to render the monthly trend line chart
+    /**
+     * Renders a line chart showing the monthly trend of device operations for the selected year.
+     * The chart displays total operational hours per month for each active device.
+     */
     async renderMonthlyTrendChart() {
         const ctx = document.getElementById('deviceOperationsLineChart')?.getContext('2d');
         if (!ctx) return;
 
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const activeDevices = devices.filter(device => device.active);
 
             const labels = [
@@ -148,6 +195,7 @@ const DeviceManager = {
             activeDevices.forEach((device, index) => {
                 const monthlyDurationsHours = new Array(12).fill(0); // Initialize for 12 months with 0 hours
 
+                // Fills the monthlyDurationsHours array with data for the selected year.
                 device.operations?.forEach(op => {
                     const opDate = new Date(op.date);
                     if (opDate.getFullYear() === this.currentStatsYear) {
@@ -156,7 +204,7 @@ const DeviceManager = {
                     }
                 });
 
-                // Only add dataset if there's any data for the current year
+                // Only adds a dataset if there is data for the current year.
                 if (monthlyDurationsHours.some(val => val > 0)) {
                     datasets.push({
                         label: device.name,
@@ -174,10 +222,12 @@ const DeviceManager = {
                 }
             });
 
+            // Destroys the existing chart instance to prevent memory leaks and conflicts.
             if (this.operationsLineChart) {
-                this.operationsLineChart.destroy(); // Destroy existing chart before re-rendering
+                this.operationsLineChart.destroy();
             }
 
+            // Creates a new Chart.js instance for the line chart.
             this.operationsLineChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -260,17 +310,22 @@ const DeviceManager = {
         }
     },
 
+    /**
+     * Fetches device data and renders the device cards on the page.
+     * The list is filtered based on the `showInactiveDevices` flag.
+     */
     async loadDevices() {
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const grid = document.getElementById('device-list');
             if (grid) {
+                // Filters devices based on the showInactiveDevices flag.
                 const devicesToDisplay = this.showInactiveDevices ? devices : devices.filter(device => device.active);
 
                 if (devicesToDisplay.length === 0) {
                     grid.innerHTML = UI.createEmptyState('tools', 'Keine Geräte', 'Füge dein erstes Gerät hinzu, um Einsätze zu verfolgen.');
                 } else {
-                    // Pass currentStatsYear to createDeviceCard for year-filtered summaries
+                    // Generates and renders the device cards, passing the currentStatsYear for filtering.
                     grid.innerHTML = devicesToDisplay.map(device => this.createDeviceCard(device, this.currentStatsYear)).join('');
                 }
                 this.bindDeviceCardEvents();
@@ -285,15 +340,20 @@ const DeviceManager = {
         }
     },
 
-    // Modified createDeviceCard to accept a yearFilter for its internal summary
+    /**
+     * Creates the HTML string for a single device card.
+     * @param {Object} device - The device data object.
+     * @param {number|string} yearFilter - The year to filter operations by for the card's summary.
+     * @returns {string} The HTML string for the device card.
+     */
     createDeviceCard(device, yearFilter) {
-        // Filter operations by year for the summary displayed *within* the card
+        // Filters operations by year for the summary displayed *within* the card
         const filteredOperations = device.operations?.filter(op =>
             yearFilter === 'all' || new Date(op.date).getFullYear() === yearFilter
         ) || [];
 
         const operationsCount = filteredOperations.length;
-        // Sort operations by date descending to get the last operation for the filtered year
+        // Sorts operations by date descending to get the last operation for the filtered year.
         const lastOperation = filteredOperations.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
         const totalDuration = filteredOperations.reduce((sum, op) => sum + op.duration, 0) || 0;
 
@@ -357,12 +417,16 @@ const DeviceManager = {
         `;
     },
 
+    /**
+     * Renders a grid of yearly device statistics, showing total hours and operations
+     * for the currently selected year.
+     */
     async renderYearlyDeviceStatistics() {
         const yearlyStatsGrid = document.getElementById('yearly-device-statistics');
         if (!yearlyStatsGrid) return;
 
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const activeDevices = devices.filter(device => device.active);
 
             if (activeDevices.length === 0) {
@@ -370,7 +434,9 @@ const DeviceManager = {
                 return;
             }
 
+            // Generates and renders yearly statistic cards for active devices.
             yearlyStatsGrid.innerHTML = activeDevices.map(device => {
+                // Filters operations by the currently selected year.
                 const filteredOperations = device.operations?.filter(op =>
                     new Date(op.date).getFullYear() === this.currentStatsYear
                 ) || [];
@@ -401,148 +467,193 @@ const DeviceManager = {
     },
 
 
-    // No changes needed for createStatisticCard, bindDeviceCardEvents, handleDeviceFormSubmit, submitOperation, deleteDevice, deleteOperation, toggleDeviceActiveStatus, toggleInactiveDeviceVisibility, updateToggleButtonStyle
-    // (Rest of the methods from your provided devices.js should be appended here)
+    /**
+     * Binds event listeners to the action buttons within each device card.
+     */
+    bindDeviceCardEvents() {
+        // Event listener for the "Add Operation" button on each device card.
+        document.querySelectorAll('.add-operation-btn[data-type="device"]').forEach(button => {
+            button.onclick = (e) => {
+                const deviceId = e.currentTarget.dataset.id;
+                UI.showOperationModal('Einsatz hinzufügen', 'device', deviceId);
+            };
+        });
 
-    bindDeviceCardEvents() { //
-        document.querySelectorAll('.add-operation-btn[data-type="device"]').forEach(button => { //
-            button.onclick = (e) => { //
-                const deviceId = e.currentTarget.dataset.id; //
-                UI.showOperationModal('Einsatz hinzufügen', 'device', deviceId); //
-            }; //
-        }); //
+        // Event listener for the "Delete Device" button.
+        document.querySelectorAll('.delete-device-btn').forEach(button => {
+            button.onclick = async (e) => {
+                const deviceId = e.currentTarget.dataset.id;
+                await this.deleteDevice(deviceId);
+            };
+        });
 
-        document.querySelectorAll('.delete-device-btn').forEach(button => { //
-            button.onclick = async (e) => { //
-                const deviceId = e.currentTarget.dataset.id; //
-                await this.deleteDevice(deviceId); //
-            }; //
-        }); //
+        // Event listener for the "Delete Operation" button within an operation summary.
+        document.querySelectorAll('.delete-operation-btn[data-type="device"]').forEach(button => {
+            button.onclick = async (e) => {
+                const operationId = e.currentTarget.dataset.operationId;
+                await this.deleteOperation(operationId);
+            };
+        });
 
-        document.querySelectorAll('.delete-operation-btn[data-type="device"]').forEach(button => { //
-            button.onclick = async (e) => { //
-                const operationId = e.currentTarget.dataset.operationId; //
-                await this.deleteOperation(operationId); //
-            }; //
-        }); //
+        // Event listener for the button that toggles a device's active status.
+        document.querySelectorAll('.toggle-active-btn').forEach(button => {
+            button.onclick = async (e) => {
+                const deviceId = e.currentTarget.dataset.id;
+                const currentActiveStatus = e.currentTarget.dataset.active === 'true';
+                await this.toggleDeviceActiveStatus(deviceId, !currentActiveStatus);
+            };
+        });
+    },
 
-        document.querySelectorAll('.toggle-active-btn').forEach(button => { //
-            button.onclick = async (e) => { //
-                const deviceId = e.currentTarget.dataset.id; //
-                const currentActiveStatus = e.currentTarget.dataset.active === 'true'; //
-                await this.toggleDeviceActiveStatus(deviceId, !currentActiveStatus); //
-            }; //
-        }); //
-    }, //
+    /**
+     * Handles the submission of the device creation form.
+     * @param {Event} e - The form submission event.
+     */
+    handleDeviceFormSubmit: async function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
 
-    handleDeviceFormSubmit: async function(e) { //
-        e.preventDefault(); //
-        const formData = new FormData(e.target); //
-
-        try { //
-            const device = { //
-                name: formData.get('name'), //
+        try {
+            const device = {
+                name: formData.get('name'),
                 active: true // New devices are active by default
-            }; //
+            };
 
-            await API.createDevice(device); //
-            UI.showToast('Gerät erfolgreich erstellt!', 'success'); //
-            UI.hideModal('device-modal'); //
-            UI.clearForm('device-form'); //
+            await DeviceAPI.createDevice(device);
+            UI.showToast('Gerät erfolgreich erstellt!', 'success');
+            UI.hideModal('device-modal');
+            UI.clearForm('device-form');
             this.loadInitialData(); // Call loadInitialData to refresh all UI elements
-        } catch (error) { //
-            console.error('Failed to create device:', error); //
+        } catch (error) {
+            console.error('Failed to create device:', error);
         }
-    }, //
+    },
 
-    submitOperation: async function(formData, type, targetId) { //
-        if (type !== 'device') return; //
+    /**
+     * Submits a new operation for a specific device.
+     * @param {FormData} formData - The form data containing operation details.
+     * @param {string} type - The type of operation, should be 'device'.
+     * @param {number} targetId - The ID of the device.
+     */
+    submitOperation: async function(formData, type, targetId) {
+        if (type !== 'device') return;
 
-        const deviceIdAsNumber = parseInt(targetId, 10); //
-        if (isNaN(deviceIdAsNumber)) { //
-            console.error('Invalid device ID for operation:', targetId); //
-            UI.showToast('Fehler: Geräte-ID für Einsatz konnte nicht ermittelt werden.', 'error'); //
-            return; // Stop execution
-        } //
+        const deviceIdAsNumber = parseInt(targetId, 10);
+        if (isNaN(deviceIdAsNumber)) {
+            console.error('Invalid device ID for operation:', targetId);
+            UI.showToast('Fehler: Geräte-ID für Einsatz konnte nicht ermittelt werden.', 'error');
+            return;
+        }
 
-        try { //
-            const operation = { //
+        try {
+            const operation = {
                 device_id: deviceIdAsNumber, // Add device_id here
-                date: formData.get('date'), //
-                duration: parseInt(formData.get('duration'), 10), //
-                note: formData.get('note') || null //
-            }; //
-            await API.createDeviceOperation(operation); // Pass the complete operation object
-            UI.showToast('Einsatz erfolgreich hinzugefügt!', 'success'); //
-            UI.hideModal('operation-modal'); //
-            UI.clearForm('operation-form'); //
+                date: formData.get('date'),
+                duration: parseInt(formData.get('duration'), 10),
+                note: formData.get('note') || null
+            };
+            await DeviceAPI.createDeviceOperation(operation);
+            UI.showToast('Einsatz erfolgreich hinzugefügt!', 'success');
+            UI.hideModal('operation-modal');
+            UI.clearForm('operation-form');
             this.loadInitialData(); // Call loadInitialData to refresh all UI elements
-        } catch (error) { //
-            console.error('Failed to add device operation:', error); //
+        } catch (error) {
+            console.error('Failed to add device operation:', error);
         }
-    }, //
+    },
 
-    async deleteDevice(deviceId) { //
-        if (!confirm('Bist du sicher, dass du dieses Gerät löschen möchtest? Dies löscht auch alle zugehörigen Einsätze.')) { //
-            return; //
-        } //
+    /**
+     * Deletes a device after a confirmation from the user.
+     * @param {number} deviceId - The ID of the device to delete.
+     */
+    async deleteDevice(deviceId) {
+        UI.showConfirmModal(
+            "Gartengerät löschen",
+            "Möchten Sie dieses Gartengerät wirklich löschen? Alle zugehörigen Einsätze werden ebenfalls entfernt.",
+            async () => {
+                try {
+                    UI.showLoading(true);
+                    await DeviceAPI.deleteDevice(deviceId);
+                    UI.showToast('Gartengerät erfolgreich gelöscht.', 'success');
+                    this.loadDevices(); // Reload devices after deletion
+                } catch (error) {
+                    console.error('Fehler beim Löschen des Geräts:', error);
+                    UI.showToast('Fehler beim Löschen des Geräts.', 'error');
+                } finally {
+                    UI.showLoading(false);
+                }
+            }
+        );
+    },
 
-        try { //
-            await API.deleteDevice(deviceId); //
-            UI.showToast('Gerät erfolgreich gelöscht!', 'success'); //
+    /**
+     * Deletes a specific operation after a confirmation from the user.
+     * @param {number} operationId - The ID of the operation to delete.
+     */
+    async deleteOperation(operationId) {
+        UI.showConfirmModal(
+            "Einsatz löschen",
+            "Möchten Sie diesen Einsatz wirklich löschen?",
+            async () => {
+                try {
+                    UI.showLoading(true);
+                    await DeviceAPI.deleteOperation(operationId);
+                    UI.showToast('Einsatz erfolgreich gelöscht.', 'success');
+                    this.loadDevices(); // Reload devices to reflect the change
+                } catch (error) {
+                    console.error('Fehler beim Löschen des Einsatzes:', error);
+                    UI.showToast('Fehler beim Löschen des Einsatzes.', 'error');
+                } finally {
+                    UI.showLoading(false);
+                }
+            }
+        );
+    },
+
+    /**
+     * Toggles a device's active/inactive status and updates it via the API.
+     * @param {number} deviceId - The ID of the device to update.
+     * @param {boolean} newStatus - The new active status (true for active, false for inactive).
+     */
+    async toggleDeviceActiveStatus(deviceId, newStatus) {
+        const actionText = newStatus ? 'aktivieren' : 'deaktivieren';
+        if (!confirm(`Bist du sicher, dass du dieses Gerät ${actionText} möchtest?`)) {
+            return;
+        }
+
+        try {
+            await DeviceAPI.updateDevice(deviceId, { active: newStatus });
+            UI.showToast(`Gerät erfolgreich ${actionText}!`, 'success');
             this.loadInitialData(); // Call loadInitialData to refresh all UI elements
-        } catch (error) { //
-            console.error('Failed to delete device:', error); //
+        } catch (error) {
+            console.error(`Failed to ${actionText} device:`, error);
         }
-    }, //
+    },
 
-    async deleteOperation(operationId) { //
-        if (!confirm('Bist du sicher, dass du diesen Einsatz löschen möchtest?')) { //
-            return; //
-        } //
+    /**
+     * Toggles the visibility of inactive devices and reloads the device list.
+     */
+    toggleInactiveDeviceVisibility() {
+        this.showInactiveDevices = !this.showInactiveDevices;
+        this.loadDevices();
+        this.updateToggleButtonStyle();
+    },
 
-        try { //
-            await API.deleteDeviceOperation(operationId); //
-            UI.showToast('Einsatz erfolgreich gelöscht!', 'success'); //
-            this.loadInitialData(); // Call loadInitialData to refresh all UI elements
-        } catch (error) { //
-            console.error('Failed to delete operation:', error); //
+    /**
+     * Updates the text and style of the toggle button based on the current visibility state.
+     */
+    updateToggleButtonStyle() {
+        const toggleButton = document.getElementById('toggle-inactive-devices-btn');
+        if (toggleButton) {
+            if (this.showInactiveDevices) {
+                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Inaktive ausblenden';
+                toggleButton.classList.remove('btn-secondary');
+                toggleButton.classList.add('btn-info');
+            } else {
+                toggleButton.innerHTML = '<i class="fas fa-eye"></i> Inaktive anzeigen';
+                toggleButton.classList.remove('btn-info');
+                toggleButton.classList.add('btn-secondary');
+            }
         }
-    }, //
-
-    async toggleDeviceActiveStatus(deviceId, newStatus) { //
-        const actionText = newStatus ? 'aktivieren' : 'deaktivieren'; //
-        if (!confirm(`Bist du sicher, dass du dieses Gerät ${actionText} möchtest?`)) { //
-            return; //
-        } //
-
-        try { //
-            await API.updateDevice(deviceId, { active: newStatus }); //
-            UI.showToast(`Gerät erfolgreich ${actionText}!`, 'success'); //
-            this.loadInitialData(); // Call loadInitialData to refresh all UI elements
-        } catch (error) { //
-            console.error(`Failed to ${actionText} device:`, error); //
-        }
-    }, //
-
-    toggleInactiveDeviceVisibility() { //
-        this.showInactiveDevices = !this.showInactiveDevices; //
-        this.loadDevices(); //
-        this.updateToggleButtonStyle(); //
-    }, //
-
-    updateToggleButtonStyle() { //
-        const toggleButton = document.getElementById('toggle-inactive-devices-btn'); //
-        if (toggleButton) { //
-            if (this.showInactiveDevices) { //
-                toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i> Inaktive ausblenden'; //
-                toggleButton.classList.remove('btn-secondary'); //
-                toggleButton.classList.add('btn-info'); //
-            } else { //
-                toggleButton.innerHTML = '<i class="fas fa-eye"></i> Inaktive anzeigen'; //
-                toggleButton.classList.remove('btn-info'); //
-                toggleButton.classList.add('btn-secondary'); //
-            } //
-        } //
-    } //
+    }
 };
