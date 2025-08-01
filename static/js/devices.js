@@ -67,6 +67,7 @@ export const DeviceManager = {
         await this.renderMonthlyTrendChart();
         await this.renderYearlyDeviceStatistics();
         await this.loadDevices(); // This should be last to ensure all data is ready for card rendering
+        await this.loadDeviceEntries();
     },
 
     /**
@@ -156,6 +157,42 @@ export const DeviceManager = {
         } catch (error) {
             console.error('Failed to load all-time device summary statistics:', error);
             allTimeSummaryGrid.innerHTML = UI.createEmptyState('exclamation-triangle', 'Fehler beim Laden der Gesamtstatistiken pro Gerät', 'Statistikdaten konnten nicht geladen werden.');
+        }
+    },
+
+    async loadDeviceEntries() {
+        try {
+            const devices = await DeviceAPI.getDevices();
+            const activeDevices = devices.filter(device => device.active);
+
+            const tableBody = document.getElementById('device-entries-table-body');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = ''; // Clear existing entries
+
+            activeDevices.forEach(device => {
+                const operations = device.operations;
+
+                operations.forEach(operation => {
+                    const row = tableBody.insertRow();
+                    row.dataset.id = device.id; // Store ID on the row
+
+                    row.innerHTML = `
+                        <td>${(device.name)}</td>
+                        <td>${Utils.formatDate(operation.date)}</td>
+                        <td>${Utils.formatDuration(operation.duration)}</td>
+                        <td>${(operation.note)}</td>
+                        <td>
+                            <button class="btn-delete" data-id="${device.id}">Löschen</button>
+                        </td>
+                    `;
+                    // Attach event listener directly after creation for efficiency
+                    row.querySelector('.btn-delete').addEventListener('click', () => this.deleteOperation(operation.id));
+                })
+            });
+        } catch (error) {
+            console.error('Error loading device entries:', error);
+            showMessage(`Fehler beim Laden der Geräte-Einträge: ${error.message}`, 'error');
         }
     },
 
@@ -397,21 +434,6 @@ export const DeviceManager = {
                             <span class="info-value">${Utils.formatDate(lastOperation.date)}</span>
                         </div>` : ''}
                     </div>
-                    ${filteredOperations.length > 0 ? `
-                    <div class="operations-summary">
-                        <div class="operations-count">Einsätze für ${yearFilter}: ${operationsCount}</div>
-                        ${filteredOperations.slice(0, 3).map(op => `
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.9em; color: var(--text-secondary);">
-                                <span>${Utils.formatDate(op.date)}</span>
-                                ${op.note ? `<span style="flex-grow: 1; margin: 0 8px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${op.note}</span>` : '<span style="flex-grow: 1; margin: 0 8px;"></span>'}
-                                <span>${Utils.formatDuration(op.duration)}</span>
-                                <button class="btn btn-sm btn-danger delete-operation-btn" data-operation-id="${op.id}" data-type="device" style="padding: 2px 6px; font-size: 0.7em;">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        `).join('')}
-                        ${filteredOperations.length > 3 ? '<div style="text-align: right; margin-top: 10px;"><a href="#" class="btn btn-sm btn-outline-primary">Alle anzeigen</a></div>' : ''}
-                    </div>` : '<div class="operations-summary"><p>Keine Einsätze für dieses Jahr.</p></div>'}
                 </div>
             </div>
         `;

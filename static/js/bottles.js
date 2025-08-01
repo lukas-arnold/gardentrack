@@ -23,6 +23,7 @@ export const BottleManager = {
         this.historyChart = null;
         this.bindEvents();
         this.loadBottles();
+        this.loadBottleEntries();
     },
 
     /**
@@ -185,33 +186,6 @@ export const BottleManager = {
                             <span class="info-value">${Utils.formatWeight(totalUsedGas)}</span>
                         </div>
                     </div>
-                    ${operationsCount > 0 ? `
-                    <div class="operations-summary">
-                        <div class="operations-count">${operationsCount} Messung${operationsCount !== 1 ? 'en' : ''}</div>
-                        ${sortedOperations.slice(0, 3).map((op, index) => {
-                            let usedGasForOperation = 0;
-                            if (index < sortedOperations.length - 1) {
-                                const previousOperation = sortedOperations[index + 1];
-                                usedGasForOperation = (previousOperation.weight - op.weight).toFixed(1);
-                            } else if (index === sortedOperations.length - 1 && bottle.operations.length > 1) {
-                                usedGasForOperation = (bottle.initial_weight - op.weight).toFixed(1);
-                            } else if (bottle.operations.length === 1) {
-                                usedGasForOperation = (bottle.initial_weight - op.weight).toFixed(1);
-                            }
-
-                            return `
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.9em; color: var(--text-secondary);">
-                                    <span>${Utils.formatDate(op.date)}</span>
-                                    <span>${Utils.formatWeight(op.weight)}</span>
-                                    ${usedGasForOperation > 0 ? `<span class="used-gas-indicator">-${Utils.formatWeight(usedGasForOperation)}</span>` : ''}
-                                    <button class="btn btn-sm btn-danger delete-operation-btn" data-operation-id="${op.id}" data-type="bottle" style="padding: 2px 6px; font-size: 0.7em;">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            `;
-                        }).join('')}
-                        ${operationsCount > 3 ? `<div class="text-center mt-2"><button class="btn btn-sm btn-outline-secondary view-all-operations-btn" data-bottle-id="${bottle.id}">Alle Messungen anzeigen</button></div>` : ''}
-                    </div>` : ''}
                 </div>
             </div>
         `;
@@ -321,6 +295,58 @@ export const BottleManager = {
         }
     },
 
+async loadBottleEntries() {
+    try {
+        const bottles = await BottleAPI.getBottles();
+        const activeBottles = bottles.filter(bottle => bottle.active);
+
+        const tableBody = document.getElementById('bottle-entries-table-body');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = ''; // Clear existing entries
+
+        activeBottles.forEach(bottle => {
+            const bottleWeight = bottle.initial_weight - bottle.filling_weight;
+            const sortedOperations = bottle.operations
+                ? [...bottle.operations].sort((a, b) => new Date(b.date) - new Date(a.date))
+                : [];
+
+            sortedOperations.forEach((operation, index) => {
+                const row = tableBody.insertRow();
+                row.dataset.id = bottle.id;
+
+                // Gewicht der vorherigen Messung (falls vorhanden)
+                let previousWeight = index < sortedOperations.length - 1
+                    ? sortedOperations[index + 1].weight
+                    : bottle.initial_weight;
+
+                // Verbrauch seit der vorherigen Messung
+                const usedGas = (previousWeight - operation.weight).toFixed(1);
+
+                // Restgas = aktuelles Gewicht - Leergewicht der Flasche
+                const remainingGas = (operation.weight - bottleWeight).toFixed(1);
+
+                row.innerHTML = `
+                    <td>${bottle.id}</td>
+                    <td>${Utils.formatDate(operation.date)}</td>
+                    <td>${Utils.formatWeight(operation.weight)}</td>
+                    <td>${Utils.formatWeight(usedGas)}</td>
+                    <td>${Utils.formatWeight(remainingGas)}</td>
+                    <td>
+                        <button class="btn-delete" data-id="${operation.id}">Löschen</button>
+                    </td>
+                `;
+
+                row.querySelector('.btn-delete').addEventListener('click', () => this.deleteOperation(operation.id));
+            });
+        });
+    } catch (error) {
+        console.error('Error loading bottle entries:', error);
+        showMessage(`Fehler beim Laden der Flaschen-Einträge: ${error.message}`, 'error');
+    }
+},
+
+
     /**
      * Deletes a bottle after a confirmation from the user.
      * @param {number} bottleId - The ID of the bottle to delete.
@@ -357,7 +383,7 @@ export const BottleManager = {
             async () => {
                 try {
                     UI.showLoading(true);
-                    await BottleAPI.deleteOperation(operationId);
+                    await BottleAPI.deleteBottleOperation(operationId);
                     UI.showToast('Messung erfolgreich gelöscht.', 'success');
                     this.loadBottles(); // Reload bottles to reflect the change
                 } catch (error) {
