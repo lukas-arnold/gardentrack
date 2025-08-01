@@ -11,10 +11,10 @@ import { Utils } from "./utils.js"
 export const DeviceManager = {
     /** @type {boolean} A flag to control the visibility of inactive devices. */
     showInactiveDevices: false,
-    
+
     /** @type {number} The year currently selected for displaying statistics and charts. */
-    currentStatsYear: new Date().getFullYear(), 
-    
+    currentStatsYear: new Date().getFullYear(),
+
     /** @type {Chart|null} The Chart.js instance for the monthly operations line chart. */
     operationsLineChart: null,
 
@@ -23,7 +23,7 @@ export const DeviceManager = {
      */
     init() {
         this.showInactiveDevices = false;
-        this.currentStatsYear = new Date().getFullYear(); 
+        this.currentStatsYear = new Date().getFullYear();
         this.operationsLineChart = null;
         this.bindEvents();
         this.loadInitialData();
@@ -81,7 +81,7 @@ export const DeviceManager = {
             // Collect all unique years from all device operations.
             devices.forEach(device => {
                 device.operations?.forEach(op => {
-                    years.add(new Date(op.date).getFullYear());
+                    years.add(new Date(op.start_time).getFullYear());
                 });
             });
 
@@ -133,7 +133,7 @@ export const DeviceManager = {
             // Maps active devices to HTML summary cards and joins them into a single string.
             allTimeSummaryGrid.innerHTML = activeDevices.map(device => {
                 // Calculates total duration and operation count for all time.
-                const totalDuration = device.operations?.reduce((sum, op) => sum + op.duration, 0) || 0;
+                const totalDuration = device.operations?.reduce((sum, op) => sum + (new Date(op.end_time).getTime() - new Date(op.start_time).getTime()) / 60000, 0) || 0;
                 const operationsCount = device.operations?.length || 0;
 
                 return `
@@ -174,14 +174,17 @@ export const DeviceManager = {
                 const operations = device.operations;
 
                 operations.forEach(operation => {
+                    const durationInMinutes = (new Date(operation.end_time).getTime() - new Date(operation.start_time).getTime()) / 60000;
                     const row = tableBody.insertRow();
                     row.dataset.id = device.id; // Store ID on the row
 
                     row.innerHTML = `
                         <td>${(device.name)}</td>
-                        <td>${Utils.formatDate(operation.date)}</td>
-                        <td>${Utils.formatDuration(operation.duration)}</td>
-                        <td>${(operation.note)}</td>
+                        <td>${Utils.formatDate(operation.start_time)}</td>
+                        <td>${Utils.formatDateTime(operation.start_time)}</td>
+                        <td>${Utils.formatDateTime(operation.end_time)}</td>
+                        <td>${Utils.formatDuration(durationInMinutes)}</td>
+                        <td>${operation.note ? operation.note : ""}</td>
                         <td>
                             <button class="btn-delete" data-id="${device.id}">Löschen</button>
                         </td>
@@ -234,10 +237,11 @@ export const DeviceManager = {
 
                 // Fills the monthlyDurationsHours array with data for the selected year.
                 device.operations?.forEach(op => {
-                    const opDate = new Date(op.date);
+                    const opDate = new Date(op.start_time);
                     if (opDate.getFullYear() === this.currentStatsYear) {
                         const month = opDate.getMonth(); // 0 for Jan, 11 for Dec
-                        monthlyDurationsHours[month] += op.duration / 60; // Convert minutes to hours
+                        const durationInMinutes = (new Date(op.end_time).getTime() - new Date(op.start_time).getTime()) / 60000;
+                        monthlyDurationsHours[month] += durationInMinutes / 60; // Convert minutes to hours
                     }
                 });
 
@@ -386,13 +390,13 @@ export const DeviceManager = {
     createDeviceCard(device, yearFilter) {
         // Filters operations by year for the summary displayed *within* the card
         const filteredOperations = device.operations?.filter(op =>
-            yearFilter === 'all' || new Date(op.date).getFullYear() === yearFilter
+            yearFilter === 'all' || new Date(op.start_time).getFullYear() === yearFilter
         ) || [];
 
         const operationsCount = filteredOperations.length;
-        // Sorts operations by date descending to get the last operation for the filtered year.
-        const lastOperation = filteredOperations.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-        const totalDuration = filteredOperations.reduce((sum, op) => sum + op.duration, 0) || 0;
+        // Sorts operations by start_time descending to get the last operation for the filtered year.
+        const lastOperation = filteredOperations.sort((a, b) => new Date(b.start_time) - new Date(a.start_time))[0];
+        const totalDuration = filteredOperations.reduce((sum, op) => sum + (new Date(op.end_time).getTime() - new Date(op.start_time).getTime()) / 60000, 0) || 0;
 
 
         return `
@@ -431,7 +435,7 @@ export const DeviceManager = {
                         ${lastOperation ? `
                         <div class="info-item">
                             <span class="info-label">Zuletzt benutzt (${yearFilter})</span>
-                            <span class="info-value">${Utils.formatDate(lastOperation.date)}</span>
+                            <span class="info-value">${Utils.formatDate(lastOperation.start_time)}</span>
                         </div>` : ''}
                     </div>
                 </div>
@@ -460,11 +464,11 @@ export const DeviceManager = {
             yearlyStatsGrid.innerHTML = activeDevices.map(device => {
                 // Filters operations by the currently selected year.
                 const filteredOperations = device.operations?.filter(op =>
-                    new Date(op.date).getFullYear() === this.currentStatsYear
+                    new Date(op.start_time).getFullYear() === this.currentStatsYear
                 ) || [];
 
                 const operationsCount = filteredOperations.length;
-                const totalDuration = filteredOperations.reduce((sum, op) => sum + op.duration, 0);
+                const totalDuration = filteredOperations.reduce((sum, op) => sum + (new Date(op.end_time).getTime() - new Date(op.start_time).getTime()) / 60000, 0);
 
                 const displayDurationHours = (totalDuration / 60).toFixed(2);
                 const displayDurationText = `${displayDurationHours}h`;
@@ -568,12 +572,22 @@ export const DeviceManager = {
         }
 
         try {
+            const operationDate = formData.get('date');
+            const startTime = formData.get('startTime');
+            const endTime = formData.get('endTime');
+
+            // Kombinieren Sie Datum und Uhrzeit zu einem vollständigen ISO-8601-Zeitstempel
+            // Fügen Sie ':00Z' hinzu, um Sekunden und Zeitzone zu spezifizieren (UTC)
+            const start_time_full = `${operationDate}T${startTime}:00Z`;
+            const end_time_full = `${operationDate}T${endTime}:00Z`;
+
             const operation = {
-                device_id: deviceIdAsNumber, // Add device_id here
-                date: formData.get('date'),
-                duration: parseInt(formData.get('duration'), 10),
+                device_id: deviceIdAsNumber,
+                start_time: start_time_full,
+                end_time: end_time_full,
                 note: formData.get('note') || null
             };
+
             await DeviceAPI.createDeviceOperation(operation);
             UI.showToast('Einsatz erfolgreich hinzugefügt!', 'success');
             UI.hideModal('operation-modal');

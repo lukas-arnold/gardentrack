@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import date as date_
+from datetime import datetime, date as date_
 from typing import List, Optional
 
 
@@ -35,8 +35,8 @@ class DeviceOperationBase(BaseModel):
     and reading.
     """
 
-    date: date_ = Field(..., description="Date of the device operation.")
-    duration: int = Field(..., description="Duration of the operation in minutes.")
+    start_time: datetime = Field(..., description="Start of the operation.")
+    end_time: datetime = Field(..., description="End of the operation.")
     note: Optional[str] = Field(None, description="Optional notes about the operation.")
 
 
