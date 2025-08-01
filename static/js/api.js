@@ -1,4 +1,7 @@
-const API = {
+import { CONFIG } from "./config.js"
+import { UI } from "./ui.js"
+
+export const API = {
     async request(endpoint, options = {}) {
         const url = `${CONFIG.API_BASE_URL}${endpoint}`;
         const config = {

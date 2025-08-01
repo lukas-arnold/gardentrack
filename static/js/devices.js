@@ -1,4 +1,8 @@
-const DeviceManager = {
+import { API } from "./api.js"
+import { UI } from "./ui.js"
+import { Utils } from "./utils.js"
+
+export const DeviceManager = {
     init() {
         this.showInactiveDevices = false;
         this.currentStatsYear = new Date().getFullYear(); // Re-introduce currentStatsYear

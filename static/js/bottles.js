@@ -1,4 +1,8 @@
-const BottleManager = {
+import { API } from "./api.js"
+import { UI } from "./ui.js"
+import { Utils } from "./utils.js"
+
+export const BottleManager = {
     init() {
         this.showInactiveBottles = false;
         this.currentChart = null; // For the consumption chart

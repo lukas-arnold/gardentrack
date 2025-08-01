@@ -1,3 +1,7 @@
+import { DeviceManager } from "./devices.js";
+import { BottleManager } from "./bottles.js";
+import { UI } from "./ui.js"
+
 let currentManager = null; // To keep track of the currently active manager
 
 const App = {

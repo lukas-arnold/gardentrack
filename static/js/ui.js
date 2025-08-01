@@ -1,4 +1,4 @@
-const UI = {
+export const UI = {
     showLoading(show) {
         const spinner = document.getElementById('loading-spinner');
         if (spinner) { // Check if spinner exists

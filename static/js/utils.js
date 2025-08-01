@@ -1,4 +1,4 @@
-const Utils = {
+export const Utils = {
     formatDate(date) {
         if (!date) return '';
         return new Date(date).toLocaleDateString();
