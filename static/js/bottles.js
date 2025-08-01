@@ -207,7 +207,7 @@ export const BottleManager = {
                 if (bottlesToDisplay.length === 0) {
                     // Display an empty state message if no bottles are available.
                     grid.innerHTML = this.createEmptyState(
-                        "gas-pump",
+                        "fire",
                         "Keine Gasflaschen",
                         "Füge deine erste Gasflasche hinzu, um den Verbrauch zu verfolgen."
                     );
