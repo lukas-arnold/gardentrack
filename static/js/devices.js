@@ -1,4 +1,4 @@
-import { API } from "./api.js"
+import { DeviceAPI } from "./api.js"
 import { UI } from "./ui.js"
 import { Utils } from "./utils.js"
 
@@ -42,7 +42,7 @@ export const DeviceManager = {
 
     async populateYearFilters() {
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const years = new Set();
             devices.forEach(device => {
                 device.operations?.forEach(op => {
@@ -83,7 +83,7 @@ export const DeviceManager = {
         if (!allTimeSummaryGrid) return;
 
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const activeDevices = devices.filter(device => device.active);
 
             if (activeDevices.length === 0) {
@@ -125,7 +125,7 @@ export const DeviceManager = {
         if (!ctx) return;
 
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const activeDevices = devices.filter(device => device.active);
 
             const labels = [
@@ -266,7 +266,7 @@ export const DeviceManager = {
 
     async loadDevices() {
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const grid = document.getElementById('device-list');
             if (grid) {
                 const devicesToDisplay = this.showInactiveDevices ? devices : devices.filter(device => device.active);
@@ -366,7 +366,7 @@ export const DeviceManager = {
         if (!yearlyStatsGrid) return;
 
         try {
-            const devices = await API.getDevices();
+            const devices = await DeviceAPI.getDevices();
             const activeDevices = devices.filter(device => device.active);
 
             if (activeDevices.length === 0) {
@@ -449,7 +449,7 @@ export const DeviceManager = {
                 active: true // New devices are active by default
             }; //
 
-            await API.createDevice(device); //
+            await DeviceAPI.createDevice(device); //
             UI.showToast('Gerät erfolgreich erstellt!', 'success'); //
             UI.hideModal('device-modal'); //
             UI.clearForm('device-form'); //
@@ -476,7 +476,7 @@ export const DeviceManager = {
                 duration: parseInt(formData.get('duration'), 10), //
                 note: formData.get('note') || null //
             }; //
-            await API.createDeviceOperation(operation); // Pass the complete operation object
+            await DeviceAPI.createDeviceOperation(operation); // Pass the complete operation object
             UI.showToast('Einsatz erfolgreich hinzugefügt!', 'success'); //
             UI.hideModal('operation-modal'); //
             UI.clearForm('operation-form'); //
@@ -492,7 +492,7 @@ export const DeviceManager = {
         } //
 
         try { //
-            await API.deleteDevice(deviceId); //
+            await DeviceAPI.deleteDevice(deviceId); //
             UI.showToast('Gerät erfolgreich gelöscht!', 'success'); //
             this.loadInitialData(); // Call loadInitialData to refresh all UI elements
         } catch (error) { //
@@ -506,7 +506,7 @@ export const DeviceManager = {
         } //
 
         try { //
-            await API.deleteDeviceOperation(operationId); //
+            await DeviceAPI.deleteDeviceOperation(operationId); //
             UI.showToast('Einsatz erfolgreich gelöscht!', 'success'); //
             this.loadInitialData(); // Call loadInitialData to refresh all UI elements
         } catch (error) { //
@@ -521,7 +521,7 @@ export const DeviceManager = {
         } //
 
         try { //
-            await API.updateDevice(deviceId, { active: newStatus }); //
+            await DeviceAPI.updateDevice(deviceId, { active: newStatus }); //
             UI.showToast(`Gerät erfolgreich ${actionText}!`, 'success'); //
             this.loadInitialData(); // Call loadInitialData to refresh all UI elements
         } catch (error) { //

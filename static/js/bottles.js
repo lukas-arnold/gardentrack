@@ -1,4 +1,4 @@
-import { API } from "./api.js"
+import { BottleAPI } from "./api.js"
 import { UI } from "./ui.js"
 import { Utils } from "./utils.js"
 
@@ -24,7 +24,7 @@ export const BottleManager = {
 
     async loadBottles() {
         try {
-            const bottles = await API.getBottles();
+            const bottles = await BottleAPI.getBottles();
             const grid = document.getElementById('bottle-list');
             if (grid) {
                 const bottlesToDisplay = this.showInactiveBottles ? bottles : bottles.filter(bottle => bottle.active);
@@ -227,7 +227,7 @@ export const BottleManager = {
                 active: true
             };
 
-            await API.createBottle(bottle);
+            await BottleAPI.createBottle(bottle);
             UI.showToast('Gasflasche erfolgreich erstellt!', 'success');
             UI.hideModal('bottle-modal');
             UI.clearForm('bottle-form');
@@ -255,7 +255,7 @@ export const BottleManager = {
                 weight: parseFloat(formData.get('weight')),
                 note: formData.get('note') || null
             };
-            await API.createBottleOperation(operation);
+            await BottleAPI.createBottleOperation(operation);
             UI.showToast('Gewichtsmessung erfolgreich hinzugefügt!', 'success');
             UI.hideModal('operation-modal');
             UI.clearForm('operation-form');
@@ -272,7 +272,7 @@ export const BottleManager = {
         }
 
         try {
-            await API.deleteBottle(bottleId);
+            await BottleAPI.deleteBottle(bottleId);
             UI.showToast('Gasflasche erfolgreich gelöscht!', 'success');
             this.loadBottles();
         } catch (error) {
@@ -287,7 +287,7 @@ export const BottleManager = {
         }
 
         try {
-            await API.deleteBottleOperation(operationId);
+            await BottleAPI.deleteBottleOperation(operationId);
             UI.showToast('Messung erfolgreich gelöscht!', 'success');
             this.loadBottles();
         } catch (error) {
@@ -303,7 +303,7 @@ export const BottleManager = {
         }
 
         try {
-            await API.updateBottle(bottleId, { active: newStatus });
+            await BottleAPI.updateBottle(bottleId, { active: newStatus });
             UI.showToast(`Gasflasche erfolgreich ${actionText}!`, 'success');
             this.loadBottles();
         } catch (error) {
