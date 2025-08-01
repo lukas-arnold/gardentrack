@@ -7,6 +7,9 @@
         <i class="fas fa-plus"></i> Gasflasche hinzufügen
     </button>
 </div>
+<div id="bottle-list" class="item-list">
+    </div>
+<br>
 <section id="charts-section" class="card">
     <div class="card-header">
         <h2 class="card-title"><i class="fas fa-chart-bar"></i> Füllstand der aktuellen Gasflasche</h2>
@@ -16,9 +19,6 @@
     </div>
 </section>
 <br>
-<div id="bottle-list" class="item-list">
-    </div>
-<br>
 <section id="charts-section" class="card">
     <div class="card-header">
         <h2 class="card-title"><i class="fas fa-chart-bar"></i> Verlauf der Füllstände der aktuellen Gasflasche</h2>
@@ -27,3 +27,23 @@
         <canvas id="bottle-history-chart"></canvas>
     </div>
 </section>
+<br>
+<div class="table-section">
+    <h2>Messungen</h2>
+    <div class="table-responsive">
+        <table id="bottle-entries-table" class="entries-table">
+            <thead>
+                <tr>
+                    <th>Flaschennummer</th>
+                    <th>Datum</th>
+                    <th>Gewicht</th>
+                    <th>Verbrauch</th>
+                    <th>Restgas</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody id="bottle-entries-table-body">
+                </tbody>
+        </table>
+    </div>
+</div>
