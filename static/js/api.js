@@ -11,55 +11,55 @@ import { UI } from "./ui.js";
  */
 async function apiRequest(url, method, data = null) {
   const options = {
-    method: method,
-    headers: {
-      "Content-Type": "application/json",
-    },
+      method: method,
+      headers: {
+          "Content-Type": "application/json",
+      },
   };
 
   if (data) {
-    options.body = JSON.stringify(data);
+      options.body = JSON.stringify(data);
   }
 
   try {
-    UI.showLoading(true);
-    const response = await fetch(url, options);
+      UI.showLoading(true);
+      const response = await fetch(url, options);
 
-    if (!response.ok) {
-      // Try to parse error data if available, otherwise use status text
-      const errorText = await response.text();
-      let errorData = {};
-      try {
-        errorData = JSON.parse(errorText);
-      } catch (e) {
-        // Not a JSON error, use the raw text
+      if (!response.ok) {
+          // Try to parse error data if available, otherwise use status text
+          const errorText = await response.text();
+          let errorData = {};
+          try {
+              errorData = JSON.parse(errorText);
+          } catch (e) {
+              // Not a JSON error, use the raw text
+          }
+          const errorMessage =
+              errorData.detail?.[0]?.msg ||
+              errorData.detail ||
+              errorText ||
+              `HTTP ${response.status}: ${response.statusText}`;
+
+          throw new Error(errorMessage);
       }
-      const errorMessage =
-        errorData.detail?.[0]?.msg ||
-        errorData.detail ||
-        errorText ||
-        `HTTP ${response.status}: ${response.statusText}`;
 
-      throw new Error(errorMessage);
-    }
+      // For 204 No Content, response.json() would throw an error
+      if (response.status === 204) {
+          return null;
+      }
 
-    // For 204 No Content, response.json() would throw an error
-    if (response.status === 204) {
-      return null;
-    }
-
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      return response.json();
-    } else {
-      return null;
-    }
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+          return response.json();
+      } else {
+          return null;
+      }
   } catch (error) {
-    console.error("API Error:", error);
-    UI.showToast(error.message, "error");
-    throw error;
+      console.error("API Error:", error);
+      UI.showToast(error.message, "error");
+      throw error;
   } finally {
-    UI.showLoading(false);
+      UI.showLoading(false);
   }
 }
 
@@ -73,7 +73,7 @@ export const DeviceAPI = {
    * @returns {Promise<Array<Object>>} A list of device objects.
    */
   async getDevices() {
-    return apiRequest(CONFIG.ENDPOINTS.DEVICES, "GET");
+      return apiRequest(CONFIG.ENDPOINTS.DEVICES, "GET");
   },
 
   /**
@@ -82,7 +82,7 @@ export const DeviceAPI = {
    * @returns {Promise<Object>} The device object.
    */
   async getDevice(id) {
-    return apiRequest(`${CONFIG.ENDPOINTS.DEVICES}/${id}`, "GET");
+      return apiRequest(`${CONFIG.ENDPOINTS.DEVICES}/${id}`, "GET");
   },
 
   /**
@@ -91,7 +91,7 @@ export const DeviceAPI = {
    * @returns {Promise<Object>} The newly created device object.
    */
   async createDevice(device) {
-    return apiRequest(CONFIG.ENDPOINTS.DEVICES, "POST", device);
+      return apiRequest(CONFIG.ENDPOINTS.DEVICES, "POST", device);
   },
 
   /**
@@ -101,7 +101,7 @@ export const DeviceAPI = {
    * @returns {Promise<Object>} The updated device object.
    */
   async updateDevice(id, deviceUpdates) {
-    return apiRequest(`${CONFIG.ENDPOINTS.DEVICES}/${id}`, "PUT", deviceUpdates);
+      return apiRequest(`${CONFIG.ENDPOINTS.DEVICES}/${id}`, "PUT", deviceUpdates);
   },
 
   /**
@@ -110,7 +110,7 @@ export const DeviceAPI = {
    * @returns {Promise<void>}
    */
   async deleteDevice(id) {
-    return apiRequest(`${CONFIG.ENDPOINTS.DEVICES}/${id}`, "DELETE");
+      return apiRequest(`${CONFIG.ENDPOINTS.DEVICES}/${id}`, "DELETE");
   },
 
   /**
@@ -119,16 +119,16 @@ export const DeviceAPI = {
    * @returns {Promise<Object>} The newly created operation object.
    */
   async createDeviceOperation(operation) {
-    const deviceId = operation.device_id;
-    if (!deviceId) {
-      console.error(
-        "device_id is missing from operation payload before API call:",
-        operation
-      );
-      throw new Error("device_id is missing from operation payload for API call.");
-    }
-    const endpoint = `${CONFIG.ENDPOINTS.DEVICES}/${deviceId}/operations/`;
-    return apiRequest(endpoint, "POST", operation);
+      const deviceId = operation.device_id;
+      if (!deviceId) {
+          console.error(
+              "device_id is missing from operation payload before API call:",
+              operation
+          );
+          throw new Error("device_id is missing from operation payload for API call.");
+      }
+      const endpoint = `${CONFIG.ENDPOINTS.DEVICES}/${deviceId}/operations/`;
+      return apiRequest(endpoint, "POST", operation);
   },
 
   /**
@@ -137,10 +137,10 @@ export const DeviceAPI = {
    * @returns {Promise<void>}
    */
   async deleteDeviceOperation(operationId) {
-    return apiRequest(
-      `${CONFIG.ENDPOINTS.DEVICES}/operations/${operationId}`,
-      "DELETE"
-    );
+      return apiRequest(
+          `${CONFIG.ENDPOINTS.DEVICES}/operations/${operationId}`,
+          "DELETE"
+      );
   },
 };
 
@@ -154,7 +154,7 @@ export const BottleAPI = {
    * @returns {Promise<Array<Object>>} A list of bottle objects.
    */
   async getBottles() {
-    return apiRequest(CONFIG.ENDPOINTS.BOTTLES, "GET");
+      return apiRequest(CONFIG.ENDPOINTS.BOTTLES, "GET");
   },
 
   /**
@@ -163,7 +163,7 @@ export const BottleAPI = {
    * @returns {Promise<Object>} The bottle object.
    */
   async getBottle(id) {
-    return apiRequest(`${CONFIG.ENDPOINTS.BOTTLES}/${id}`, "GET");
+      return apiRequest(`${CONFIG.ENDPOINTS.BOTTLES}/${id}`, "GET");
   },
 
   /**
@@ -172,7 +172,7 @@ export const BottleAPI = {
    * @returns {Promise<Object>} The newly created bottle object.
    */
   async createBottle(bottle) {
-    return apiRequest(CONFIG.ENDPOINTS.BOTTLES, "POST", bottle);
+      return apiRequest(CONFIG.ENDPOINTS.BOTTLES, "POST", bottle);
   },
 
   /**
@@ -182,7 +182,7 @@ export const BottleAPI = {
    * @returns {Promise<Object>} The updated bottle object.
    */
   async updateBottle(id, bottleUpdates) {
-    return apiRequest(`${CONFIG.ENDPOINTS.BOTTLES}/${id}`, "PUT", bottleUpdates);
+      return apiRequest(`${CONFIG.ENDPOINTS.BOTTLES}/${id}`, "PUT", bottleUpdates);
   },
 
   /**
@@ -191,7 +191,7 @@ export const BottleAPI = {
    * @returns {Promise<void>}
    */
   async deleteBottle(id) {
-    return apiRequest(`${CONFIG.ENDPOINTS.BOTTLES}/${id}`, "DELETE");
+      return apiRequest(`${CONFIG.ENDPOINTS.BOTTLES}/${id}`, "DELETE");
   },
 
   /**
@@ -200,16 +200,16 @@ export const BottleAPI = {
    * @returns {Promise<Object>} The newly created operation object.
    */
   async createBottleOperation(operation) {
-    const bottleId = operation.bottle_id;
-    if (!bottleId) {
-      console.error(
-        "bottle_id is missing from operation payload before API call:",
-        operation
-      );
-      throw new Error("bottle_id is missing from operation payload for API call.");
-    }
-    const endpoint = `${CONFIG.ENDPOINTS.BOTTLES}/${bottleId}/operations/`;
-    return apiRequest(endpoint, "POST", operation);
+      const bottleId = operation.bottle_id;
+      if (!bottleId) {
+          console.error(
+              "bottle_id is missing from operation payload before API call:",
+              operation
+          );
+          throw new Error("bottle_id is missing from operation payload for API call.");
+      }
+      const endpoint = `${CONFIG.ENDPOINTS.BOTTLES}/${bottleId}/operations/`;
+      return apiRequest(endpoint, "POST", operation);
   },
 
   /**
@@ -218,9 +218,9 @@ export const BottleAPI = {
    * @returns {Promise<void>}
    */
   async deleteBottleOperation(operationId) {
-    return apiRequest(
-      `${CONFIG.ENDPOINTS.BOTTLES}/operations/${operationId}`,
-      "DELETE"
-    );
+      return apiRequest(
+          `${CONFIG.ENDPOINTS.BOTTLES}/operations/${operationId}`,
+          "DELETE"
+      );
   },
 };
