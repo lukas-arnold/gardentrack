@@ -129,6 +129,24 @@
         </div>
     </div>
 
+    <div class="modal" id="delete-modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="delete-modal-title">Löschen bestätigen</h2>
+                <button class="modal-close" id="delete-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="delete-modal-message">Sind Sie sicher, dass Sie dies löschen möchten?</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="delete-cancel-btn">Abbrechen</button>
+                <button class="btn btn-danger" id="delete-confirm-btn">Löschen</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-container" id="toast-container"></div>
 
     <script type="module" src="/static/js/app.js"></script>

@@ -321,43 +321,54 @@ export const BottleManager = {
     }
   },
 
-  /**
-   * Deletes a bottle after a confirmation from the user.
-   * @param {number} bottleId - The ID of the bottle to delete.
-   */
-  async deleteBottle(bottleId) {
-    if (!confirm("Bist du sicher, dass du diese Gasflasche löschen möchtest? Dies löscht auch alle zugehörigen Messungen.")) {
-      return;
-    }
+    /**
+     * Deletes a bottle after a confirmation from the user.
+     * @param {number} bottleId - The ID of the bottle to delete.
+     */
+    async deleteBottle(bottleId) {
+        // Use the new confirmation modal instead of the default browser alert.
+        UI.showConfirmModal(
+            "Gasflasche löschen",
+            "Möchten Sie diese Gasflasche wirklich löschen? Alle zugehörigen Messungen werden ebenfalls entfernt.",
+            async () => {
+                try {
+                    UI.showLoading(true);
+                    await BottleAPI.deleteBottle(bottleId);
+                    UI.showToast('Gasflasche erfolgreich gelöscht.', 'success');
+                    this.loadBottles(); // Reload bottles after deletion
+                } catch (error) {
+                    console.error('Fehler beim Löschen der Gasflasche:', error);
+                    UI.showToast('Fehler beim Löschen der Gasflasche.', 'error');
+                } finally {
+                    UI.showLoading(false);
+                }
+            }
+        );
+    },
 
-    try {
-      await BottleAPI.deleteBottle(bottleId);
-      UI.showToast("Gasflasche erfolgreich gelöscht!", "success");
-      this.loadBottles();
-    } catch (error) {
-      console.error("Failed to delete bottle:", error);
-      UI.showToast("Fehler beim Löschen der Gasflasche.", "error");
-    }
-  },
-
-  /**
-   * Deletes a specific operation (weight measurement) after confirmation.
-   * @param {number} operationId - The ID of the operation to delete.
-   */
-  async deleteOperation(operationId) {
-    if (!confirm("Bist du sicher, dass du diese Messung löschen möchtest?")) {
-      return;
-    }
-
-    try {
-      await BottleAPI.deleteBottleOperation(operationId);
-      UI.showToast("Messung erfolgreich gelöscht!", "success");
-      this.loadBottles();
-    } catch (error) {
-      console.error("Failed to delete measurement:", error);
-      UI.showToast("Fehler beim Löschen der Messung.", "error");
-    }
-  },
+    /**
+     * Deletes a specific operation (weight measurement) after confirmation.
+     * @param {number} operationId - The ID of the operation to delete.
+     */
+    async deleteOperation(operationId) {
+        UI.showConfirmModal(
+            "Messung löschen",
+            "Möchten Sie diese Messung wirklich löschen?",
+            async () => {
+                try {
+                    UI.showLoading(true);
+                    await BottleAPI.deleteOperation(operationId);
+                    UI.showToast('Messung erfolgreich gelöscht.', 'success');
+                    this.loadBottles(); // Reload bottles to reflect the change
+                } catch (error) {
+                    console.error('Fehler beim Löschen der Messung:', error);
+                    UI.showToast('Fehler beim Löschen der Messung.', 'error');
+                } finally {
+                    UI.showLoading(false);
+                }
+            }
+        );
+    },
 
   /**
    * Toggles a bottle's active/inactive status and updates it via the API.

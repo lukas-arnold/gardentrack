@@ -72,6 +72,48 @@ export const UI = {
     },
 
     /**
+     * Shows a generic confirmation modal with a custom message and a callback for the confirm button.
+     * @param {string} title - The title for the modal header.
+     * @param {string} message - The message to display inside the modal body.
+     * @param {Function} onConfirm - The callback function to execute when the confirm button is clicked.
+     */
+    showConfirmModal(title, message, onConfirm) {
+        const modal = document.getElementById('delete-modal');
+        const modalTitle = document.getElementById('delete-modal-title');
+        const modalMessage = document.getElementById('delete-modal-message');
+        const confirmBtn = document.getElementById('delete-confirm-btn');
+        const cancelBtn = document.getElementById('delete-cancel-btn');
+
+        if (!modal || !modalTitle || !modalMessage || !confirmBtn || !cancelBtn) return;
+
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+
+        // Clone and replace the buttons to remove old event listeners
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+        newConfirmBtn.addEventListener('click', () => {
+            onConfirm();
+            this.hideModal('delete-modal');
+        });
+
+        newCancelBtn.addEventListener('click', () => {
+            this.hideModal('delete-modal');
+        });
+
+        // Also handle the close button in the header
+        document.getElementById('delete-modal-close')?.addEventListener('click', () => {
+            this.hideModal('delete-modal');
+        }, { once: true }); // Use { once: true } to prevent multiple listeners
+
+        this.showModal('delete-modal');
+    },
+
+    /**
      * Hides a modal by removing the 'active' class and restoring body scrolling.
      * @param {string} modalId - The ID of the modal element to hide.
      */

@@ -567,17 +567,23 @@ export const DeviceManager = {
      * @param {number} deviceId - The ID of the device to delete.
      */
     async deleteDevice(deviceId) {
-        if (!confirm('Bist du sicher, dass du dieses Gerät löschen möchtest? Dies löscht auch alle zugehörigen Einsätze.')) {
-            return;
-        }
-
-        try {
-            await DeviceAPI.deleteDevice(deviceId);
-            UI.showToast('Gerät erfolgreich gelöscht!', 'success');
-            this.loadInitialData(); // Call loadInitialData to refresh all UI elements
-        } catch (error) {
-            console.error('Failed to delete device:', error);
-        }
+        UI.showConfirmModal(
+            "Gartengerät löschen",
+            "Möchten Sie dieses Gartengerät wirklich löschen? Alle zugehörigen Einsätze werden ebenfalls entfernt.",
+            async () => {
+                try {
+                    UI.showLoading(true);
+                    await DeviceAPI.deleteDevice(deviceId);
+                    UI.showToast('Gartengerät erfolgreich gelöscht.', 'success');
+                    this.loadDevices(); // Reload devices after deletion
+                } catch (error) {
+                    console.error('Fehler beim Löschen des Geräts:', error);
+                    UI.showToast('Fehler beim Löschen des Geräts.', 'error');
+                } finally {
+                    UI.showLoading(false);
+                }
+            }
+        );
     },
 
     /**
@@ -585,17 +591,23 @@ export const DeviceManager = {
      * @param {number} operationId - The ID of the operation to delete.
      */
     async deleteOperation(operationId) {
-        if (!confirm('Bist du sicher, dass du diesen Einsatz löschen möchtest?')) {
-            return;
-        }
-
-        try {
-            await DeviceAPI.deleteDeviceOperation(operationId);
-            UI.showToast('Einsatz erfolgreich gelöscht!', 'success');
-            this.loadInitialData(); // Call loadInitialData to refresh all UI elements
-        } catch (error) {
-            console.error('Failed to delete operation:', error);
-        }
+        UI.showConfirmModal(
+            "Einsatz löschen",
+            "Möchten Sie diesen Einsatz wirklich löschen?",
+            async () => {
+                try {
+                    UI.showLoading(true);
+                    await DeviceAPI.deleteOperation(operationId);
+                    UI.showToast('Einsatz erfolgreich gelöscht.', 'success');
+                    this.loadDevices(); // Reload devices to reflect the change
+                } catch (error) {
+                    console.error('Fehler beim Löschen des Einsatzes:', error);
+                    UI.showToast('Fehler beim Löschen des Einsatzes.', 'error');
+                } finally {
+                    UI.showLoading(false);
+                }
+            }
+        );
     },
 
     /**
