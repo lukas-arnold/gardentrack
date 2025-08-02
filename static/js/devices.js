@@ -278,7 +278,7 @@ export const DeviceManager = {
             });
 
             // Sort by date
-            allOperations.sort((a, b) => new Date(a.operation.start_time) - new Date(b.operation.start_time));
+            allOperations.sort((a, b) => new Date(b.operation.start_time) - new Date(a.operation.start_time));
 
             // Render
             allOperations.forEach(({ operation, device }) => {

@@ -446,7 +446,6 @@ export class ChartManager {
                         }
                     },
                     beginAtZero: true,
-                    min: 5,
                     ticks: {
                         callback: function(value) {
                             // Format Y-axis labels appropriately
