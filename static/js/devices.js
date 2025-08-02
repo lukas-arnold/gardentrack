@@ -153,7 +153,7 @@ export const DeviceManager = {
         );
     },
 
-    async deleteOperation(operationId, operationName, deleteFunction, reloadFunction) {
+    async _deleteOperation(operationId, operationName, deleteFunction, reloadFunction) {
         UI.showConfirmModal(
             `${operationName} löschen`,
             `Möchten Sie diesen ${operationName} wirklich löschen?`,
@@ -563,7 +563,7 @@ export const DeviceManager = {
      * @param {number} operationId - The ID of the operation to delete.
      */
     async deleteOperation(operationId) {
-        await this.deleteOperation(operationId, 'Einsatz', DeviceAPI.deleteOperation, () => this.loadDevices());
+        await this._deleteOperation(operationId, 'Einsatz', DeviceAPI.deleteDeviceOperation, () => this.loadDeviceEntries() && this.loadYearlyDeviceEntries());
     },
     
     /**

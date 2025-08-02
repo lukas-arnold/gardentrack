@@ -150,7 +150,7 @@ export const BottleManager = {
         );
     },
 
-    async deleteOperation(operationId, operationName, deleteFunction, reloadFunction) {
+    async _deleteOperation(operationId, operationName, deleteFunction, reloadFunction) {
         UI.showConfirmModal(
             `${operationName} löschen`,
             `Möchten Sie diesen ${operationName} wirklich löschen?`,
@@ -454,6 +454,6 @@ export const BottleManager = {
      * @param {number} operationId - The ID of the operation to delete.
      */
     async deleteOperation(operationId) {
-        await this.deleteOperation(operationId, 'Messung', BottleAPI.deleteBottleOperation, () => this.loadBottles());
+        await this._deleteOperation(operationId, 'Messung', BottleAPI.deleteBottleOperation, () => this.loadBottleEntries());
     },
 };
