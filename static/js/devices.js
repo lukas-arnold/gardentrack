@@ -175,18 +175,26 @@ export const DeviceManager = {
 
     async toggleActiveStatus(itemId, newStatus, itemName, updateFunction, reloadFunction) {
         const actionText = newStatus ? 'aktivieren' : 'deaktivieren';
-        if (!confirm(`Bist du sicher, dass du dieses ${itemName} ${actionText} möchtest?`)) {
-            return;
-        }
+        const confirmBtnText = newStatus ? 'Aktivieren' : 'Deaktivieren'; // <-- Neuer Text für den Button
+        const title = `${itemName} ${actionText}`;
+        const message = `Bist du sicher, dass du dieses ${itemName} wirklich ${actionText} möchtest?`;
+        
+        // Die Toast-Nachricht wird dynamisch gesetzt
+        const toastMessage = `${itemName} erfolgreich ${newStatus ? 'aktiviert' : 'deaktiviert'}.`;
 
-        try {
-            await updateFunction(itemId, { active: newStatus });
-            UI.showToast(`${itemName} erfolgreich ${actionText}!`, 'success');
-            reloadFunction();
-        } catch (error) {
-            console.error(`Failed to ${actionText} ${itemName}:`, error);
-            UI.showToast(`Fehler beim ${actionText} des ${itemName}.`, 'error');
-        }
+        UI.showConfirmModal(title, message, async () => {
+            try {
+                UI.showLoading(true);
+                await updateFunction(itemId, { active: newStatus });
+                UI.showToast(toastMessage, 'success');
+                reloadFunction();
+            } catch (error) {
+                console.error(`Fehler beim ${actionText} des ${itemName}:`, error);
+                UI.showToast(`Fehler beim ${actionText} des ${itemName}.`, 'error');
+            } finally {
+                UI.showLoading(false);
+            }
+        }, confirmBtnText); // <-- Übergabe des neuen Button-Textes
     },
 
     filterItemsByVisibility(items) {
