@@ -427,7 +427,7 @@ body {
 }
 
 .card-title {
-    margin: 0;
+    margin-right: 10px;
     font-size: 1.3em; /* Slightly larger title */
     font-weight: 600;
     color: var(--primary-color);
@@ -525,7 +525,6 @@ body.dark-mode .status-inactive {
 .card-info {
     margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-md);
-    border-bottom: 1px dashed var(--border-color);
     transition: border-bottom 0.3s ease;
 }
 
@@ -573,7 +572,6 @@ body.dark-mode .status-inactive {
 /* Statistics grid layout for overall summary and yearly stats */
 .all-time-device-summary-section .statistics-grid,
 .statistics-overview-section .statistics-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjusted min width for more items per row */
     gap: var(--spacing-md); /* Consistent gap */
 }
 

@@ -20,6 +20,8 @@ class DevicesDB(BaseDevices, BaseModelMixin):
     __tablename__ = "devices"
 
     name: Mapped[str] = mapped_column(nullable=False)
+    purchase_date: Mapped[date_] = mapped_column(nullable=False)
+    purchase_price: Mapped[float] = mapped_column(nullable=False)
     active: Mapped[bool] = mapped_column(default=True, nullable=False)
 
     operations: Mapped[list["DeviceOperationsDB"]] = relationship(

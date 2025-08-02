@@ -320,6 +320,8 @@ export const DeviceManager = {
         const cardBody = `
             <div class="card-body">
                 <div class="card-info">
+                    ${DataManager.createInfoItem("Kaufdatum", Utils.formatDate(device.purchase_date))}
+                    ${DataManager.createInfoItem("Kaufpreis", Utils.formatCurrency(device.purchase_price))}
                     ${DataManager.createInfoItem(`Gesamteinsätze (${yearFilter})`, stats.operationsCount)}
                     ${DataManager.createInfoItem(`Gesamtbetriebszeit (${yearFilter})`, Utils.formatDuration(stats.totalDuration))}
                     ${stats.lastOperation ? DataManager.createInfoItem(`Zuletzt benutzt (${yearFilter})`, Utils.formatDate(stats.lastOperation.start_time)) : ''}
@@ -354,11 +356,14 @@ export const DeviceManager = {
             // Maps active devices to HTML summary cards and joins them into a single string.
             allTimeSummaryGrid.innerHTML = devices.map(device => {
                 const totalDuration = DataManager.calculateTotalDuration(device.operations);
+                const totalHours = totalDuration / 60;
+                const costsPerHour = totalDuration !== 0 ?  device.purchase_price / totalHours : 0;
                 const operationsCount = device.operations?.length || 0;
 
                 const statistics = [
                     { icon: 'clock', label: 'Betriebszeit', value: Utils.formatDuration(totalDuration) },
-                    { icon: 'clipboard-list', label: 'Einsätze', value: operationsCount }
+                    { icon: 'clipboard-list', label: 'Einsätze', value: operationsCount },
+                    { icon: 'euro-sign', label: 'Gerätestundensatz', value: Utils.formatCurrency(costsPerHour) + "/h" }
                 ];
 
                 return DataManager.createStatisticCard(device.name, statistics, 'device-all-time-summary-card');
@@ -485,6 +490,8 @@ export const DeviceManager = {
         try {
             const device = {
                 name: formData.get('name'),
+                purchase_date: formData.get("purchase_date"),
+                purchase_price: formData.get("purchase_price"),
                 active: true // New devices are active by default
             };
 
