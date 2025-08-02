@@ -176,18 +176,21 @@ export const UI = {
         document.getElementById('operation-date').value = new Date().toISOString().split('T')[0];
         
         // Show/hide fields based on the operation type.
-        const durationGroup = document.getElementById('duration-group');
+        const startTimeGroup = document.getElementById('start-time-group');
+        const endTimeGroup = document.getElementById('end-time-group');
         const weightGroup = document.getElementById('weight-group');
         const noteGroup = document.getElementById('note-group');
 
         if (type === 'device') {
-            if (durationGroup) durationGroup.style.display = 'block';
+            if (startTimeGroup) startTimeGroup.style.display = 'block';
+            if (endTimeGroup) endTimeGroup.style.display = 'block';
             if (weightGroup) weightGroup.style.display = 'none';
-            if (noteGroup) noteGroup.style.display = 'block'; // Ensure note is visible for devices
+            if (noteGroup) noteGroup.style.display = 'block';
         } else if (type === 'bottle') {
-            if (durationGroup) durationGroup.style.display = 'none';
+            if (startTimeGroup) startTimeGroup.style.display = 'none';
+            if (endTimeGroup) endTimeGroup.style.display = 'none';
             if (weightGroup) weightGroup.style.display = 'block';
-            if (noteGroup) noteGroup.style.display = 'none'; // Ensure note is hidden for bottles
+            if (noteGroup) noteGroup.style.display = 'none';
         }
 
         this.showModal('operation-modal');

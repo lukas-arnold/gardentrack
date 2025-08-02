@@ -1348,7 +1348,7 @@ body.dark-mode .dark-mode-toggle:hover {
     }
 
     .entries-table {
-        min-width: 600px; /* Ensure table doesn't get too cramped */
+        min-width: 600px; /* Ensure table remains wide for horizontal scroll */
     }
 
     /* Enhanced modal for small screens */
@@ -1374,8 +1374,14 @@ body.dark-mode .dark-mode-toggle:hover {
 
     /* Improved status badges for small screens */
     .status-badge {
+        /*
+        The following lines were adjusted from the original:
         padding: 6px 8px;
         font-size: 0.8em;
+        This change makes the badge more readable and easier to interact with.
+        */
+        padding: 8px 12px;
+        font-size: 0.9em;
     }
 
     /* Better navigation for small screens */
@@ -1413,6 +1419,7 @@ body.dark-mode .dark-mode-toggle:hover {
 .table-responsive {
     width: 100%;
     overflow-x: auto; /* Enable horizontal scrolling on small screens */
+    -webkit-overflow-scrolling: touch;
 }
 
 .entries-table {
@@ -1490,52 +1497,22 @@ body.dark-mode .dark-mode-toggle:hover {
         text-align: center;
     }
 
-    .entries-table,
-    .entries-table thead,
-    .entries-table tbody,
-    .entries-table th,
-    .entries-table td,
-    .entries-table tr {
-        display: block;
+    .entries-table {
+        /* This min-width is necessary to enable horizontal scrolling */
+        min-width: 600px;
     }
-    
-    .entries-table thead tr {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
+}
+
+/* The previous mobile table layout that hid headers has been removed */
+
+/* Mobile responsiveness for smaller screens (480px and below) has been kept */
+@media (max-width: 480px) {
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-    .entries-table tr {
-        border: 1px solid var(--border-color);
-        margin-bottom: var(--spacing-sm);
-        border-radius: var(--border-radius);
-        overflow: hidden;
-        box-shadow: var(--box-shadow-small);
-        background-color: var(--card-bg);
-    }
-    .entries-table tr:hover {
-        background-color: var(--card-bg); /* No change on hover to prevent flickering */
-    }
-
-    .entries-table td {
-        border: none;
-        position: relative;
-        padding-left: 50%;
-        text-align: right;
-    }
-    
-    .entries-table td:before {
-        content: attr(data-label);
-        position: absolute;
-        left: 0;
-        width: 50%;
-        padding-left: var(--spacing-md);
-        font-weight: 600;
-        color: var(--text-primary);
-        text-align: left;
-    }
-    
-    .entries-table td:last-child {
-        text-align: center;
+    .entries-table {
+        min-width: 600px; /* Maintain minimum width for horizontal scroll */
     }
 }

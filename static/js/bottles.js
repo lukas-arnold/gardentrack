@@ -427,13 +427,13 @@ export const BottleManager = {
                 bottle_id: bottleIdAsNumber,
                 date: formData.get("date"),
                 weight: parseFloat(formData.get("weight")),
-                note: formData.get("note") || null,
             };
             await BottleAPI.createBottleOperation(operation);
             UI.showToast("Gewichtsmessung erfolgreich hinzugefügt!", "success");
             UI.hideModal("operation-modal");
             UI.clearForm("operation-form");
             this.loadBottles();
+            this.loadBottleEntries();
         } catch (error) {
             console.error("Failed to add bottle operation:", error);
             UI.showToast("Fehler beim Hinzufügen der Gewichtsmessung.", "error");
