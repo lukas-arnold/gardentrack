@@ -7,6 +7,18 @@
     --primary-hover: #3a68e0; /* Darker hover for primary */
     --secondary-color: #6c757d; /* Standard muted gray */
     --accent-purple: #8e44ad; /* A subtle accent color for specific elements like gradients */
+    
+    /* Chart Colors - Consistent palette */
+    --chart-blue: #4a7dff;
+    --chart-purple: #8e44ad;
+    --chart-green: #2ecc71;
+    --chart-yellow: #f1c40f;
+    --chart-red: #e74c3c;
+    --chart-teal: #1abc9c;
+    --chart-orange: #f39c12;
+    --chart-light-purple: #9b59b6;
+    --chart-light-blue: #3498db;
+    --chart-dark-orange: #e67e22;
 
     /* Status Colors */
     --success-color: #28a745;
@@ -161,21 +173,45 @@ body {
     border-radius: var(--border-radius-small); /* Smaller radius for tabs */
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.25s ease; /* Smoother transition for tabs */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smoother transition for tabs */
     font-size: 0.95rem; /* Slightly larger tab font */
     font-weight: 500;
     text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-tab::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-purple));
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
 }
 
 .nav-tab:hover {
     background: var(--card-bg-light);
     color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.nav-tab:hover::before {
+    width: 80%;
 }
 
 .nav-tab.active {
     background: var(--primary-color);
     color: var(--white-text);
     box-shadow: var(--box-shadow-small); /* Subtle shadow for active tab */
+    transform: translateY(-1px);
+}
+
+.nav-tab.active::before {
+    width: 100%;
 }
 
 .nav-tab-home {
@@ -253,9 +289,26 @@ body {
     font-size: 1rem; /* Slightly larger button text */
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.25s ease; /* Smoother transition */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smoother transition */
     text-decoration: none;
     white-space: nowrap; /* Prevent text wrap */
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
 }
 
 .btn-primary {
@@ -333,12 +386,30 @@ body {
     overflow: hidden;
     display: flex; /* Flexbox for card content */
     flex-direction: column;
-    transition: transform 0.25s ease-in-out, background-color 0.4s ease, box-shadow 0.4s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease, box-shadow 0.4s ease;
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-purple));
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-6px);
     box-shadow: var(--shadow-lg); /* More pronounced shadow on hover */
+}
+
+.card:hover::before {
+    opacity: 1;
 }
 
 .card.hidden-inactive {
@@ -356,7 +427,7 @@ body {
 }
 
 .card-title {
-    margin: 0;
+    margin-right: 10px;
     font-size: 1.3em; /* Slightly larger title */
     font-weight: 600;
     color: var(--primary-color);
@@ -390,7 +461,7 @@ body {
 
 
 .status-badge {
-    padding: 6px 10px; /* Larger badge padding */
+    padding: 8px 12px; /* Larger badge padding */
     border-radius: var(--border-radius-lg); /* Pill shape for badge */
     font-size: 0.85em; /* Slightly larger badge font */
     font-weight: bold;
@@ -398,21 +469,42 @@ body {
     align-items: center;
     gap: 6px;
     white-space: nowrap;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.status-badge:hover::before {
+    left: 100%;
 }
 
 .status-active {
-    background-color: rgba(40, 167, 69, 0.15); /* Slightly less opaque green for lighter feel */
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.15), rgba(40, 167, 69, 0.25));
     color: #28a745;
-}
-body.dark-mode .status-active {
-    background-color: rgba(110, 231, 183, 0.15); /* Adjusted for dark mode success color */
-    color: var(--success-color);
+    border: 1px solid rgba(40, 167, 69, 0.3);
 }
 
+body.dark-mode .status-active {
+    background: linear-gradient(135deg, rgba(110, 231, 183, 0.15), rgba(110, 231, 183, 0.25));
+    color: var(--success-color);
+    border: 1px solid rgba(110, 231, 183, 0.3);
+}
 
 .status-inactive {
-    background-color: rgba(108, 117, 125, 0.15); /* Slightly less opaque grey */
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.15), rgba(108, 117, 125, 0.25));
     color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
 }
 body.dark-mode .status-inactive {
     background-color: rgba(174, 190, 205, 0.15); /* Adjusted for dark mode secondary color */
@@ -433,7 +525,6 @@ body.dark-mode .status-inactive {
 .card-info {
     margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-md);
-    border-bottom: 1px dashed var(--border-color);
     transition: border-bottom 0.3s ease;
 }
 
@@ -481,7 +572,6 @@ body.dark-mode .status-inactive {
 /* Statistics grid layout for overall summary and yearly stats */
 .all-time-device-summary-section .statistics-grid,
 .statistics-overview-section .statistics-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjusted min width for more items per row */
     gap: var(--spacing-md); /* Consistent gap */
 }
 
@@ -896,7 +986,25 @@ body.dark-mode .filter-controls .form-control:focus {
     height: 400px; /* Consistent height */
     display: flex;
     flex-direction: column;
-    transition: background-color 0.4s ease, box-shadow 0.4s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+    overflow: visible; /* Allow axis labels to be visible */
+}
+
+.charts-section .chart-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-purple), var(--chart-green));
+    opacity: 0.8;
+}
+
+.charts-section .chart-container:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
 }
 
 .charts-section .chart-container h4 {
@@ -905,12 +1013,32 @@ body.dark-mode .filter-controls .form-control:focus {
     text-align: center;
     font-size: 1.25em; /* Slightly larger chart title */
     transition: color 0.3s ease;
+    position: relative;
+}
+
+.charts-section .chart-container h4::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-purple));
+    border-radius: 1px;
 }
 
 .charts-section .chart-container canvas {
     width: 100% !important;
     height: 100% !important;
     flex-grow: 1;
+    transition: transform 0.3s ease;
+    padding-bottom: 30px !important; /* Add padding for X-axis labels */
+    margin-bottom: 10px; /* Additional margin for labels */
+}
+
+.charts-section .chart-container:hover canvas {
+    transform: scale(1.01);
 }
 
 /* Dark Mode Toggle Switch */
@@ -968,6 +1096,82 @@ body.dark-mode .dark-mode-toggle:hover {
     .nav-tab {
         padding: var(--spacing-xs); /* Smaller padding for tabs on mobile */
         font-size: 0.8rem;
+    }
+
+    /* Enhanced mobile card layout */
+    .item-list,
+    .statistics-grid {
+        grid-template-columns: 1fr; /* Single column on mobile */
+        gap: var(--spacing-sm);
+    }
+
+    /* Better mobile chart containers */
+    .charts-section .chart-container {
+        height: 300px; /* Smaller height for mobile */
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .charts-section .chart-container h4 {
+        font-size: 1.1em;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    /* Mobile-optimized buttons */
+    .btn {
+        min-height: 44px; /* Better touch target */
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .btn-sm {
+        min-height: 36px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    /* Mobile card improvements */
+    .card {
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .card-header {
+        padding: var(--spacing-sm);
+        flex-direction: column;
+        gap: var(--spacing-xs);
+        align-items: flex-start;
+    }
+
+    .card-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .card-title {
+        font-size: 1.1em;
+    }
+
+    /* Mobile table improvements */
+    .table-section {
+        padding: var(--spacing-sm);
+    }
+
+    .entries-table {
+        font-size: 0.9em;
+    }
+
+    /* Mobile modal improvements */
+    .modal-content {
+        margin: var(--spacing-sm);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .modal-actions .btn {
+        width: 100%;
     }
     .nav-tab i {
         font-size: 1.2rem; /* Ensure icons are visible */
@@ -1103,6 +1307,85 @@ body.dark-mode .dark-mode-toggle:hover {
     }
     .device-statistic-overview-card .card-title {
         font-size: 1.3em; /* Smaller title for overview cards */
+    }
+
+    /* Enhanced small screen optimizations */
+    .section-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: flex-start;
+    }
+
+    .section-header h1 {
+        font-size: 1.8rem;
+    }
+
+    /* Better touch targets for small screens */
+    .btn {
+        min-height: 48px;
+        font-size: 1rem;
+    }
+
+    .btn-sm {
+        min-height: 40px;
+        font-size: 0.9rem;
+    }
+
+    /* Improved chart responsiveness */
+    .charts-section .chart-container {
+        height: 250px;
+        padding: var(--spacing-xs);
+    }
+
+    .charts-section .chart-container h4 {
+        font-size: 1em;
+    }
+
+    /* Better table handling on small screens */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .entries-table {
+        min-width: 600px; /* Ensure table doesn't get too cramped */
+    }
+
+    /* Enhanced modal for small screens */
+    .modal-content {
+        margin: var(--spacing-xs);
+        border-radius: var(--border-radius-small);
+    }
+
+    .modal-header {
+        padding: var(--spacing-sm);
+    }
+
+    .modal-body {
+        padding: var(--spacing-sm);
+    }
+
+    /* Better form controls on small screens */
+    .form-group input,
+    .form-group select {
+        font-size: 16px; /* Prevent zoom on iOS */
+        padding: var(--spacing-sm);
+    }
+
+    /* Improved status badges for small screens */
+    .status-badge {
+        padding: 6px 8px;
+        font-size: 0.8em;
+    }
+
+    /* Better navigation for small screens */
+    .nav-tabs {
+        gap: var(--spacing-xs);
+    }
+
+    .nav-tab {
+        padding: var(--spacing-xs);
+        font-size: 0.85rem;
     }
 }
 

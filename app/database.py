@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.models import BaseDevices, BaseDevices
+from app.models import BaseDevices, BaseBottles
 
 DEVICES_DATABASE_URL = "sqlite:///./devices.db"
 BOTTLES_DATABASE_URL = "sqlite:///./bottles.db"
@@ -22,7 +22,7 @@ SessionLocalBottles = sessionmaker(
 
 def init_db():
     BaseDevices.metadata.create_all(bind=engine_devices)
-    BaseDevices.metadata.create_all(bind=engine_bottles)
+    BaseBottles.metadata.create_all(bind=engine_bottles)
 
 
 def get_db_devices():

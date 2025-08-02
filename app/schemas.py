@@ -71,6 +71,8 @@ class DeviceBase(BaseModel):
     """
 
     name: str = Field(..., description="Name of the device.")
+    purchase_date: date_ = Field(..., description="Date the device was purchased.")
+    purchase_price: float = Field(..., description="Purchase price of the device.")
     active: bool = Field(
         True, description="Indicates if the device is currently active."
     )
