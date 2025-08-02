@@ -47,7 +47,11 @@ export const Utils = {
      * @returns {string} The formatted weight string, e.g., "10 kg".
      */
     formatWeight(weight) {
-        return `${weight} kg`;
+        return new Intl.NumberFormat('de-DE', {
+            useGrouping: true,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 1
+        }).format(weight) + " kg";
     },
 
     /**
@@ -62,6 +66,20 @@ export const Utils = {
             return `${hours}h ${mins}m`;
         }
         return `${mins}m`;
+    },
+
+    /**
+     * Formats a number representing hours into a more readable string.
+     *
+     * @param {number} hours - The number of hours.
+     * @returns {string} The formatted string (e.g., 1,5 Stunden").
+     */
+    formatHours(hours) {
+        return new Intl.NumberFormat('de-DE', {
+            useGrouping: true,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        }).format(hours);
     },
 
     /**

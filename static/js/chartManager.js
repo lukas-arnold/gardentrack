@@ -155,8 +155,9 @@ export class ChartManager {
      * @param {Array} labels - Array of labels for the x-axis.
      * @param {Array} data - Array of data values.
      * @param {Object} options - Additional chart options.
+    * @param {string} [datasetLabel] - Optional label for the dataset.
      */
-    createBarChart(canvasId, chartName, labels, data, options = {}) {
+    createBarChart(canvasId, chartName, labels, data, options = {}, datasetLabel = "") {
         const ctx = document.getElementById(canvasId)?.getContext('2d');
         if (!ctx) {
             console.warn(`Chart canvas element '${canvasId}' not found.`);
@@ -170,7 +171,7 @@ export class ChartManager {
             responsive: true,
             plugins: {
                 legend: {
-                    display: false
+                    display: true
                 }
             },
             scales: {
@@ -199,6 +200,7 @@ export class ChartManager {
             data: {
                 labels: labels,
                 datasets: [{
+                    label: datasetLabel,
                     data: data,
                     backgroundColor: this.generateColors(data.length),
                     borderColor: this.generateColors(data.length).map(color => color.replace('0.8', '1')),
@@ -276,10 +278,31 @@ export class ChartManager {
                         }
                     }
                 }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        // Hier wird der Callback angepasst
+                        label: function(context) {
+                            // Hol den Datensatz-Titel (z.B. "Füllstand")
+                            let label = context.dataset.label || ''; 
+                            
+                            // Füge den Wert des Datenpunkts hinzu
+                            if (context.parsed.y !== null) {
+                                label += ': ' + context.parsed.y + '%';
+                            }
+                            
+                            // Das fertige Label zurückgeben
+                            return label;
+                        }
+                    }
+                }
             }
         };
 
-        return this.createBarChart('consumption-chart', 'consumption', labels, data, options);
+        const datasetLabel = "Füllstand"
+
+        return this.createBarChart('consumption-chart', 'consumption', labels, data, options, datasetLabel);
     }
 
     /**
@@ -385,7 +408,7 @@ export class ChartManager {
                                     const minutes = Math.round(hours * 60);
                                     label += `${minutes} Minuten`;
                                 } else {
-                                    label += `${hours.toFixed(1)} Stunden`;
+                                    label += `${Utils.formatHours(hours)} Stunden`;
                                 }
                             }
                             return label;
@@ -580,7 +603,7 @@ export class ChartManager {
                         beginAtZero: false,
                         title: {
                             display: true,
-                            text: "Gewicht (kg)",
+                            text: "Gewicht",
                         },
                         ticks: {
                             callback: function (value) {

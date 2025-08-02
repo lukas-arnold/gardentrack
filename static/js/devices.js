@@ -392,7 +392,7 @@ export const DeviceManager = {
             yearlyStatsGrid.innerHTML = devices.map(device => {
                 const stats = DataManager.calculateDeviceStats(device, this.currentStatsYear);
                 const displayDurationHours = (stats.totalDuration / 60).toFixed(2);
-                const displayDurationText = `${displayDurationHours}h`;
+                const displayDurationText = `${Utils.formatHours(displayDurationHours)}h`;
 
                 return `
                     <div class="statistic-card device-statistic-overview-card">
