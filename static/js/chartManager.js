@@ -423,6 +423,7 @@ export class ChartManager {
                         }
                     },
                     beginAtZero: true,
+                    min: 5,
                     ticks: {
                         callback: function(value) {
                             // Format Y-axis labels appropriately
@@ -448,96 +449,147 @@ export class ChartManager {
         return this.createLineChart('deviceOperationsLineChart', 'operationsLine', labels, datasets, options);
     }
 
-    /**
-     * Creates a history chart for bottle weight tracking.
-     * @param {Array} bottles - Array of bottle objects with operation history.
-     */
-    createBottleHistoryChart(bottles) {
-        // Consistent color palette for bottle history
-        const colors = [
-            'rgba(74, 125, 255, 1)',   // Primary Blue
-            'rgba(142, 68, 173, 1)',   // Purple
-            'rgba(46, 204, 113, 1)',   // Green
-            'rgba(241, 196, 15, 1)',   // Yellow
-            'rgba(26, 188, 156, 1)',   // Teal
-            'rgba(243, 156, 18, 1)',   // Orange
-            'rgba(155, 89, 182, 1)',   // Light Purple
-            'rgba(52, 152, 219, 1)',   // Light Blue
-            'rgba(230, 126, 34, 1)',   // Dark Orange
-            'rgba(231, 76, 60, 1)'     // Red
+    createBottleHistoryChart(activeBottles) {
+        const ctx = document.getElementById("bottle-history-chart")?.getContext("2d");
+
+        if (!ctx) {
+            console.warn("Chart canvas element 'bottle-history-chart' not found. Please add a canvas element with id='bottle-history-chart' to your HTML.");
+            return;
+        }
+
+        if (this.historyChart) {
+            this.historyChart.destroy();
+        }
+        
+        const lineColors = [
+            '#4285F4', '#DB4437', '#F4B400', '#0F9D58', '#673AB7', 
+            '#00BCD4', '#FF9800', '#CDDC39', '#E91E63', '#9C27B0'
         ];
+        let colorIndex = 0;
 
-        const datasets = bottles.map((bottle, index) => {
-            const sortedOperations = bottle.operations ? 
-                [...bottle.operations].sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
-            
-            const dataPoints = [];
-
-            // Include initial weight as starting point
-            dataPoints.push({
-                x: Utils.formatDate(bottle.purchase_date),
-                y: bottle.initial_weight
-            });
-
-            // Add each operation as a data point
-            sortedOperations.forEach(op => {
-                dataPoints.push({
-                    x: Utils.formatDate(op.date),
-                    y: op.weight
+        const allDates = new Set();
+        activeBottles.forEach(bottle => {
+            allDates.add(new Date(bottle.purchase_date).getTime());
+            if (bottle.operations) {
+                bottle.operations.forEach(op => {
+                    allDates.add(new Date(op.date).getTime());
                 });
-            });
-
-            return {
-                label: `Flasche #${bottle.id}`,
-                data: dataPoints,
-                borderColor: colors[index % colors.length],
-                fill: false,
-                tension: 0.1
-            };
+            }
         });
 
-        const options = {
-            plugins: {
-                title: {
-                    display: true,
-                    text: "Verlauf des Flaschengewichts (Aktive Flaschen)"
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || "";
-                            if (label) {
-                                label += ": ";
-                            }
-                            if (context.parsed.y !== null) {
-                                label += Utils.formatWeight(context.parsed.y);
-                            }
-                            return label;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    type: "category",
-                    title: {
-                        text: "Datum"
-                    }
-                },
-                y: {
-                    beginAtZero: false,
-                    title: {
-                        text: "Gewicht (kg)"
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return Utils.formatWeight(value);
-                        }
-                    }
-                }
-            }
-        };
+        const sortedDateTimestamps = Array.from(allDates).sort((a, b) => a - b);
+        const sortedDateLabels = sortedDateTimestamps.map(timestamp => Utils.formatDate(new Date(timestamp)));
 
-        return this.createLineChart('bottle-history-chart', 'bottleHistory', [], datasets, options);
+        let datasets = [];
+
+        activeBottles.forEach((bottle) => {
+            const color = lineColors[colorIndex % lineColors.length];
+            colorIndex++;
+
+            const bottleData = new Map();
+            bottleData.set(Utils.formatDate(bottle.purchase_date), bottle.initial_weight);
+            if (bottle.operations) {
+                bottle.operations.forEach(op => {
+                    bottleData.set(Utils.formatDate(op.date), op.weight);
+                });
+            }
+
+            const weightDataPoints = sortedDateLabels.map(dateLabel => {
+                return bottleData.has(dateLabel) ? bottleData.get(dateLabel) : null;
+            });
+
+            // Hier den unsichtbaren Datenpunkt bei y: 0 hinzufügen
+            // Dies zwingt die Y-Skala, 0 einzuschließen.
+            const invisibleZeroPoint = {
+                x: sortedDateLabels[0],
+                y: 8,
+            };
+            weightDataPoints.push(invisibleZeroPoint);
+            
+            const tareWeight = bottle.initial_weight - bottle.filling_weight;
+
+            datasets.push({
+                label: `Flasche #${bottle.id}`,
+                data: weightDataPoints,
+                borderColor: color,
+                backgroundColor: `${color}40`,
+                fill: true,
+                tension: 0.1,
+                // Die Linie sollte nicht zum unsichtbaren Punkt verlaufen
+                spanGaps: true, 
+            });
+
+            datasets.push({
+                label: `Flasche #${bottle.id} (Leer)`,
+                data: [{
+                    x: sortedDateLabels[0],
+                    y: tareWeight,
+                }, {
+                    x: sortedDateLabels[sortedDateLabels.length - 1],
+                    y: tareWeight,
+                }],
+                borderColor: `${color}80`,
+                borderDash: [5, 5],
+                backgroundColor: 'transparent',
+                fill: false,
+                pointRadius: 0,
+                tension: 0,
+            });
+        });
+
+        this.historyChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: sortedDateLabels,
+                datasets: datasets,
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: "Verlauf des Flaschengewichts (Aktive Flaschen)",
+                    },
+                    tooltip: {
+                        mode: "index",
+                        intersect: false,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || "";
+                                if (label) {
+                                    label += ": ";
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += Utils.formatWeight(context.parsed.y);
+                                }
+                                return label;
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        type: "category",
+                        title: {
+                            display: true,
+                            text: "Datum",
+                        },
+                    },
+                    y: {
+                        min: 8,
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: "Gewicht (kg)",
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return Utils.formatWeight(value);
+                            },
+                        },
+                    },
+                },
+            },
+        });
     }
 } 
