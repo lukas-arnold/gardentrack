@@ -37,6 +37,7 @@ export const DeviceManager = {
     toggleInactiveVisibility(toggleButtonId, loadFunction) {
         this.showInactive = !this.showInactive;
         loadFunction();
+        this.loadInitialData();
         this.updateToggleButtonStyle(toggleButtonId);
     },
 
@@ -209,6 +210,7 @@ export const DeviceManager = {
         await this.renderYearlyDeviceStatistics();
         await this.loadDevices(); // This should be last to ensure all data is ready for card rendering
         await this.loadDeviceEntries();
+        await this.loadYearlyDeviceEntries();
     },
 
     /**
@@ -241,33 +243,62 @@ export const DeviceManager = {
         }
     },
 
-    async loadDeviceEntries() {
+    async loadDeviceOperations({ filterYear = null, tableBodyId }) {
         try {
-            const devices = await DeviceAPI.getDevices();
-            const activeDevices = devices.filter(device => device.active);
+            let devices = await DeviceAPI.getDevices();
+            if (!this.showInactive) {
+                devices = devices.filter(device => device.active);
+            }
 
-            const tableBody = document.getElementById('device-entries-table-body');
+            const tableBody = document.getElementById(tableBodyId);
             if (!tableBody) return;
 
             tableBody.innerHTML = ''; // Clear existing entries
 
-            activeDevices.forEach(device => {
-                const operations = device.operations;
-
-                operations.forEach(operation => {
-                    const row = tableBody.insertRow();
-                    row.dataset.id = device.id; // Store ID on the row
-
-                    row.innerHTML = DataManager.createOperationTableRow(operation, device, 'device');
-                    
-                    // Attach event listener directly after creation for efficiency
-                    row.querySelector('.btn-delete').addEventListener('click', () => this.deleteOperation(operation.id));
-                })
+            // Get all operations with device
+            const allOperations = [];
+            devices.forEach(device => {
+                device.operations.forEach(operation => {
+                    // Filter by year
+                    if (
+                        !filterYear || 
+                        new Date(operation.start_time).getFullYear() === filterYear
+                    ) {
+                        allOperations.push({ operation, device });
+                    }
+                });
             });
+
+            // Sort by date
+            allOperations.sort((a, b) => new Date(a.operation.start_time) - new Date(b.operation.start_time));
+
+            // Render
+            allOperations.forEach(({ operation, device }) => {
+                const row = tableBody.insertRow();
+                row.dataset.id = device.id;
+
+                row.innerHTML = DataManager.createOperationTableRow(operation, device, 'device');
+
+                row.querySelector('.btn-delete').addEventListener('click', () => this.deleteOperation(operation.id));
+            });
+
         } catch (error) {
             console.error('Error loading device entries:', error);
             UI.showToast(`Fehler beim Laden der Geräte-Einträge: ${error.message}`, 'error');
         }
+    },
+
+    async loadYearlyDeviceEntries() {
+        this.loadDeviceOperations({
+            filterYear: this.currentStatsYear,
+            tableBodyId: 'device-entries-table-body'
+        });
+    },
+
+    async loadDeviceEntries() {
+        this.loadDeviceOperations({
+            tableBodyId: 'all-device-entries-table-body'
+        });
     },
     
     /**
@@ -308,17 +339,20 @@ export const DeviceManager = {
         if (!allTimeSummaryGrid) return;
 
         try {
-            const devices = await DeviceAPI.getDevices();
-            const activeDevices = devices.filter(device => device.active);
+            let devices = await DeviceAPI.getDevices();
+            if (!this.showInactive) {
+                devices = devices.filter(device => device.active);
+            }
+
 
             // Displays a message if there are no active devices.
-            if (activeDevices.length === 0) {
+            if (devices.length === 0) {
                 allTimeSummaryGrid.innerHTML = this.createEmptyState('tools', 'Keine Geräte', 'Füge Geräte hinzu, um Gesamtstatistiken zu sehen.');
                 return;
             }
 
             // Maps active devices to HTML summary cards and joins them into a single string.
-            allTimeSummaryGrid.innerHTML = activeDevices.map(device => {
+            allTimeSummaryGrid.innerHTML = devices.map(device => {
                 const totalDuration = DataManager.calculateTotalDuration(device.operations);
                 const operationsCount = device.operations?.length || 0;
 
@@ -344,16 +378,18 @@ export const DeviceManager = {
         if (!yearlyStatsGrid) return;
 
         try {
-            const devices = await DeviceAPI.getDevices();
-            const activeDevices = devices.filter(device => device.active);
+            let devices = await DeviceAPI.getDevices();
+            if (!this.showInactive) {
+                devices = devices.filter(device => device.active);
+            }
 
-            if (activeDevices.length === 0) {
+            if (devices.length === 0) {
                 yearlyStatsGrid.innerHTML = this.createEmptyState('chart-bar', 'Keine Statistiken verfügbar', 'Füge aktive Geräte und Einsätze hinzu, um Statistiken zu sehen.');
                 return;
             }
 
             // Generates and renders yearly statistic cards for active devices.
-            yearlyStatsGrid.innerHTML = activeDevices.map(device => {
+            yearlyStatsGrid.innerHTML = devices.map(device => {
                 const stats = DataManager.calculateDeviceStats(device, this.currentStatsYear);
                 const displayDurationHours = (stats.totalDuration / 60).toFixed(2);
                 const displayDurationText = `${displayDurationHours}h`;
@@ -365,7 +401,6 @@ export const DeviceManager = {
                         </div>
                         <div class="card-body">
                             <span class="statistic-value">${displayDurationText}</span>
-                            <span class="statistic-sub-value">${stats.totalDuration} Minuten</span>
                             <span class="statistic-sub-value">${stats.operationsCount} Einsätze</span>
                         </div>
                     </div>
@@ -383,7 +418,11 @@ export const DeviceManager = {
      */
     async renderMonthlyTrendChart() {
         try {
-            const devices = await DeviceAPI.getDevices();
+            let devices = await DeviceAPI.getDevices();
+            if (!this.showInactive) {
+                devices = devices.filter(device => device.active);
+            }
+
             this.chartManager.createMonthlyTrendChart(devices, this.currentStatsYear);
         } catch (error) {
             console.error('Failed to render monthly trend chart:', error);
@@ -417,6 +456,7 @@ export const DeviceManager = {
             this.renderMonthlyTrendChart();
             this.renderYearlyDeviceStatistics();
             this.loadDevices();
+            this.loadYearlyDeviceEntries();
         });
     },
 

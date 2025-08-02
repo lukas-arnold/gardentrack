@@ -34,6 +34,7 @@ export const BottleManager = {
     toggleInactiveVisibility(toggleButtonId, loadFunction) {
         this.showInactive = !this.showInactive;
         loadFunction();
+        this.loadBottleEntries();
         this.updateToggleButtonStyle(toggleButtonId);
     },
 
@@ -226,7 +227,10 @@ export const BottleManager = {
                         };
                     });
                     this.chartManager.createConsumptionChart(activeBottlesForChart);
-                    const activeBottlesWithHistory = bottlesToDisplay.filter((b) => b.active);
+                    let activeBottlesWithHistory = bottlesToDisplay;
+                    if (!this.showInactive) {
+                        activeBottlesWithHistory = bottlesToDisplay.filter((b) => b.active);
+                    }
                     this.chartManager.createBottleHistoryChart(activeBottlesWithHistory);
                 }
                 // Rebind events for the newly created bottle cards and update the toggle button's style.
@@ -250,42 +254,50 @@ export const BottleManager = {
     
     async loadBottleEntries() {
         try {
-            const bottles = await BottleAPI.getBottles();
-            const activeBottles = bottles.filter(bottle => bottle.active);
+            let bottles = await BottleAPI.getBottles();
+            if (!this.showInactive) {
+                bottles = bottles.filter(bottle => bottle.active);
+            }
 
             const tableBody = document.getElementById('bottle-entries-table-body');
             if (!tableBody) return;
 
             tableBody.innerHTML = ''; // Clear existing entries
 
-            activeBottles.forEach(bottle => {
-                const sortedOperations = bottle.operations
-                    ? [...bottle.operations].sort((a, b) => new Date(b.date) - new Date(a.date))
-                    : [];
+            const allOperations = [];
 
-                sortedOperations.forEach((operation, index) => {
-                    const row = tableBody.insertRow();
-                    row.dataset.id = bottle.id;
+            bottles.forEach(bottle => {
+                const operations = bottle.operations ? [...bottle.operations] : [];
 
-                    // Gewicht der vorherigen Messung (falls vorhanden)
-                    let previousWeight = index < sortedOperations.length - 1
-                        ? sortedOperations[index + 1].weight
-                        : bottle.initial_weight;
+                operations.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                    // Add previous weight to operation for DataManager
-                    operation.previousWeight = previousWeight;
+                // Calculate previousWeight per bottle
+                operations.forEach((operation, index) => {
+                    const nextOp = operations[index + 1];
+                    operation.previousWeight = nextOp ? nextOp.weight : bottle.initial_weight;
 
-                    row.innerHTML = DataManager.createOperationTableRow(operation, bottle, 'bottle');
-
-                    row.querySelector('.btn-delete').addEventListener('click', () => this.deleteOperation(operation.id));
+                    allOperations.push({ operation, bottle });
                 });
             });
+
+            // Sort by date
+            allOperations.sort((a, b) => new Date(b.operation.date) - new Date(a.operation.date));
+
+            allOperations.forEach(({ operation, bottle }) => {
+                const row = tableBody.insertRow();
+                row.dataset.id = bottle.id;
+
+                row.innerHTML = DataManager.createOperationTableRow(operation, bottle, 'bottle');
+
+                row.querySelector('.btn-delete').addEventListener('click', () => this.deleteOperation(operation.id));
+            });
+
         } catch (error) {
             console.error('Error loading bottle entries:', error);
             UI.showToast(`Fehler beim Laden der Flaschen-Einträge: ${error.message}`, 'error');
         }
     },
-    
+
     /**
      * Toggles the visibility of inactive bottles and reloads the bottle list.
      */

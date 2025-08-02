@@ -308,9 +308,8 @@ export class ChartManager {
         ];
 
         const datasets = [];
-        const activeDevices = devices.filter(device => device.active);
 
-        activeDevices.forEach((device, index) => {
+        devices.forEach((device, index) => {
             const monthlyDurationsHours = new Array(12).fill(0);
 
             device.operations?.forEach(op => {
