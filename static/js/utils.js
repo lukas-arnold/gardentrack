@@ -5,13 +5,18 @@
  */
 export const Utils = {
     /**
-     * Formats a date string into a localized date string.
-     * @param {string|Date} date - The date to format.
-     * @returns {string} The formatted date string, or an empty string if the input is falsy.
+     * Formats a date string to 'DD.MM.YYYY'.
+     * @param {string} dateString - The date string from the backend (e.g., 'YYYY-MM-DD').
+     * @returns {string} Formatted date.
      */
-    formatDate(date) {
-        if (!date) return '';
-        return new Date(date).toLocaleDateString();
+    formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
     },
 
     /**
@@ -47,7 +52,11 @@ export const Utils = {
      * @returns {string} The formatted weight string, e.g., "10 kg".
      */
     formatWeight(weight) {
-        return `${weight} kg`;
+        return new Intl.NumberFormat('de-DE', {
+            useGrouping: true,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 1
+        }).format(weight) + " kg";
     },
 
     /**
@@ -62,6 +71,20 @@ export const Utils = {
             return `${hours}h ${mins}m`;
         }
         return `${mins}m`;
+    },
+
+    /**
+     * Formats a number representing hours into a more readable string.
+     *
+     * @param {number} hours - The number of hours.
+     * @returns {string} The formatted string (e.g., 1,5 Stunden").
+     */
+    formatHours(hours) {
+        return new Intl.NumberFormat('de-DE', {
+            useGrouping: true,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        }).format(hours);
     },
 
     /**
