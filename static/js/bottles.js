@@ -331,6 +331,7 @@ export const BottleManager = {
                     ${DataManager.createInfoItem('Flaschengewicht', Utils.formatWeight(stats.bottleWeight))}
                     ${DataManager.createInfoItem('Restliches Gas', Utils.formatWeight(stats.remainingGasKg))}
                     ${DataManager.createInfoItem('Gesamtverbrauch', Utils.formatWeight(stats.totalUsedGas))}
+                    ${DataManager.createInfoItem('Gesamtmessungen', stats.operationsCount)}
                 </div>
             </div>
         `;

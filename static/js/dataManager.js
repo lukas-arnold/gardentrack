@@ -102,9 +102,9 @@ export class DataManager {
         const currentWeight = lastOperation?.weight !== undefined ? lastOperation.weight : bottle.initial_weight;
         const bottleWeight = bottle.initial_weight - bottle.filling_weight;
         const totalUsedGas = (bottle.initial_weight - currentWeight).toFixed(1);
-        const remainingGasKg = (currentWeight - bottle.filling_weight).toFixed(1);
-        const remainingPercentage = bottleWeight > 0 ? 
-            (((currentWeight - bottle.filling_weight) / bottleWeight) * 100) : 0;
+        const remainingGasKg = (currentWeight - bottleWeight).toFixed(1);
+        const remainingPercentage = bottle.filling_weight > 0 ? 
+            ((remainingGasKg / bottle.filling_weight) * 100) : 0;
 
         return {
             operationsCount,
